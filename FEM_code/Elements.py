@@ -21,6 +21,6 @@ class Element:
         self.nodes = node_ids
 
     def ke(self, he):
-        ke = np.array([1, -1], [-1, 1])
+        ke = np.array([[1.0, -1.0], [-1.0, 1.0]])
         ke *= (1/he)
         return ke
