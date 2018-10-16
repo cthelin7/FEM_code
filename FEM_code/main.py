@@ -7,8 +7,8 @@ g = 1.0
 h = -1.0
 
 # uxx + f = 0
-# u(1) = 0
-# -ux(0) = 0
+# u(1) = 0      ------ ng = last, x = 1     ----- ng_id = num_nodes
+# -ux(0) = 0    ------ nh = first, x = 0    ----- nh_id = 1
 
 num_elements = 4
 nodes_per_element = 2
@@ -21,16 +21,6 @@ choice = "linear"
 
 f_coeff = 1.0
 
-if choice == "constant":
-    f = funcs.constant
-    f_coeff = he/2.0
-elif choice == "linear":
-    f = funcs.linear
-    f_coeff = he/6.0
-elif choice == "quadratic":
-    f = funcs.quadratic
-    f_coeff = he/12.0
-
 node_ids = []
 for i in range(0, num_nodes):
     node = Nodes.Node(i+1)
@@ -38,18 +28,35 @@ for i in range(0, num_nodes):
     node_ids.append(i+1)
 
 
-ng_id = 5
+ng_id = num_nodes
 ng = Nodes.nodes_list[ng_id]
+
+nh_id = 1
+nh = Nodes.nodes_list[nh_id]
 
 # determine active nodes
 active_nodes = []
-# for node in Nodes.nodes_list:
-#     if node is not ng:
-#         active_nodes.append(node)
-
 for i, node in enumerate(Nodes.nodes_list):
     if node is not ng_id:
         active_nodes.append(node)
+
+if choice == "constant":
+    f = funcs.constant
+    fab = funcs.fe_constant
+    f_coeff = he/2.0
+    u = funcs.exact_constant
+elif choice == "linear":
+    f = funcs.linear
+    f_coeff = he/6.0
+    fab = funcs.fe_linear
+    u = funcs.exact_linear
+elif choice == "quadratic":
+    f = funcs.quadratic
+    f_coeff = he/12.0
+    fab = funcs.fe_quadratic
+    u = funcs.exact_quadratic
+
+
 
 # assign nodes to elements
 k = nodes_per_element - 2
@@ -106,8 +113,9 @@ for e in range(0, num_elements):
     x2 = Nodes.nodes_list[IEN[1][e]].location
 
     fe = [0, 0]
-    fe[0] = f_coeff * 2.0 * f(x1) + f_coeff * f(x2)
-    fe[1] = f_coeff * f(x1) + f_coeff * 2.0* f(x2)
+    # fe[0] = f_coeff * 2.0 * f(x1) + f_coeff * f(x2)
+    # fe[1] = f_coeff * f(x1) + f_coeff * 2.0* f(x2)
+    fe = fab(f_coeff, f(x1), f(x2))
 
     # print e, fe
     # assemble into global arrays
@@ -119,8 +127,50 @@ for e in range(0, num_elements):
                 Q = LM[b][e]
                 if Q != 0:
                     K[P-1][Q-1] = K[P-1][Q-1] + ke[a][b]  # need to loop over ke?
+
+            # # Compute boundary conditions (none in this example)
+            # if P == nh_id:
+            #     if a == 0:
+            #         fe[a] += h
+            #     elif a == nodes_per_element - 1:
+            #         fe[a] += -h
+            #
+            #     if P == ng_id:
+            #         if
+
             # add to F
             F[P-1] = F[P-1] + fe[a]
-    # print F
+
 print F
-# d = F/K
+F_np = np.asarray([F])
+print F_np
+F_npt = np.ndarray.transpose(F_np)
+print F_npt
+K_np = np.asarray(K)
+# K_np_inv = np.linalg.inv(K)
+print K_np
+# print K_np_inv
+
+# # d = K\F
+# d = K_np_inv*F_npt
+# print d
+d = np.linalg.solve(K_np, F_npt)
+print d
+
+
+# compute u
+const_comp1 = 1.0
+const_comp2 = 0.0
+coeff_comp = 1.0/he
+
+# u_vec = np.zeros((1, num_elements), dtype=np.int).tolist()
+u = [0,0]
+for e in range(0, num_elements):
+    # u[e] =
+    const = const_comp1*d[e] + const_comp2*d[e+1]
+    coeff = -coeff_comp*d[e] + coeff_comp*d[e+1]
+    u[0] += const
+    u[1] += coeff
+
+    const_comp1 += 1.0
+    const_comp2 -= 1.0
