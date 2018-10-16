@@ -38,3 +38,16 @@ def exact_linear(x):
 
 def exact_quadratic(x):
     pass
+
+
+def approx_constant(x, coeff1, coeff2):
+    pass
+
+
+def approx_linear(x, coeff1, coeff2):
+    uhx = coeff1*x + coeff2
+    return uhx
+
+
+def approx_quadratic(x, coeff1, coeff2):
+    pass

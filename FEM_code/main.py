@@ -2,6 +2,7 @@ import numpy as np
 import Elements
 import Nodes
 import funcs
+import math
 
 g = 1.0
 h = -1.0
@@ -45,16 +46,22 @@ if choice == "constant":
     fab = funcs.fe_constant
     f_coeff = he/2.0
     u = funcs.exact_constant
+    uh_f = funcs.approx_constant
+    f_string = ["----", "----"]
 elif choice == "linear":
     f = funcs.linear
     f_coeff = he/6.0
     fab = funcs.fe_linear
     u = funcs.exact_linear
+    uh_f = funcs.approx_linear
+    f_string = ["x", ""]
 elif choice == "quadratic":
     f = funcs.quadratic
     f_coeff = he/12.0
     fab = funcs.fe_quadratic
     u = funcs.exact_quadratic
+    uh_f = funcs.approx_quadratic
+    f_string = ["----","----"]
 
 
 
@@ -141,36 +148,60 @@ for e in range(0, num_elements):
             # add to F
             F[P-1] = F[P-1] + fe[a]
 
-print F
+# print F
 F_np = np.asarray([F])
-print F_np
+# print F_np
 F_npt = np.ndarray.transpose(F_np)
-print F_npt
+print "F = " + str(F_npt)
 K_np = np.asarray(K)
 # K_np_inv = np.linalg.inv(K)
-print K_np
+print "K = " + str(K_np)
 # print K_np_inv
 
 # # d = K\F
 # d = K_np_inv*F_npt
 # print d
 d = np.linalg.solve(K_np, F_npt)
-print d
+print "d = " + str(d)
 
-
-# compute u
 const_comp1 = 1.0
 const_comp2 = 0.0
 coeff_comp = 1.0/he
 
 # u_vec = np.zeros((1, num_elements), dtype=np.int).tolist()
-u = [0,0]
+uh = [0, 0]
 for e in range(0, num_elements):
-    # u[e] =
-    const = const_comp1*d[e] + const_comp2*d[e+1]
-    coeff = -coeff_comp*d[e] + coeff_comp*d[e+1]
-    u[0] += const
-    u[1] += coeff
+    const = 0.0
+    coeff = 0.0
+    if LM[0][e] != 0.0:
+        const += const_comp1 * d[e]
+        coeff += -coeff_comp * d[e]
+    if LM[1][e] != 0.0:
+        const += const_comp2*d[e + 1]
+        coeff += coeff_comp*d[e + 1]
+
+    print "uh[" + str(e) + "] = " + str(coeff) + f_string[0] + " + " + str(const) + f_string[1]
+    uh[0] += coeff
+    uh[1] += const
 
     const_comp1 += 1.0
     const_comp2 -= 1.0
+print "uh = " + str(uh[0]) + f_string[0] + " + " +  str(uh[1]) + f_string[1]
+
+z = [0.0, 0.0, 0.0]
+w = [0.0, 0.0, 0.0]
+
+z[0] = -math.sqrt(3.0/5.0)
+z[1] = 0.0
+z[2] = math.sqrt(3.0/5.0)
+
+w[0] = 5.0/9.0
+w[1] = 8.0/9.0
+w[2] = 5.0/9.0
+
+print "z = " + str(z)
+print "w = " + str(w)
+
+for i in range(0, len(w)):
+    sum = (abs(u(z[i]) - uh_f(z[i])))*(abs(u(z[i]) - uh_f(z[i])))*w[i]
+    
