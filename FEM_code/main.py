@@ -38,16 +38,18 @@ for i in range(0, num_nodes):
     node_ids.append(i+1)
 
 
-ng_id = 1
+ng_id = 5
 ng = Nodes.nodes_list[ng_id]
 
 # determine active nodes
 active_nodes = []
-for node in Nodes.nodes_list:
-    if node is not ng:
+# for node in Nodes.nodes_list:
+#     if node is not ng:
+#         active_nodes.append(node)
+
+for i, node in enumerate(Nodes.nodes_list):
+    if node is not ng_id:
         active_nodes.append(node)
-
-
 
 # assign nodes to elements
 k = nodes_per_element - 2
@@ -105,8 +107,9 @@ for e in range(0, num_elements):
 
     fe = [0, 0]
     fe[0] = f_coeff * 2.0 * f(x1) + f_coeff * f(x2)
-    fe[1] = f_coeff * f(x1) + f_coeff * f(x2)
+    fe[1] = f_coeff * f(x1) + f_coeff * 2.0* f(x2)
 
+    # print e, fe
     # assemble into global arrays
     for a in range(0, nodes_per_element):
         # add to K
