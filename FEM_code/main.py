@@ -4,14 +4,14 @@ import Nodes
 import funcs
 import math
 
-g = 1.0
-h = -1.0
+g = 0.0
+h = -0.0
 
 # uxx + f = 0
 # u(1) = 0      ------ ng = last, x = 1     ----- ng_id = num_nodes
 # -ux(0) = 0    ------ nh = first, x = 0    ----- nh_id = 1
 
-num_elements = 4
+num_elements = 200
 nodes_per_element = 2
 num_nodes = nodes_per_element*num_elements - (num_elements - 1)
 he = 1/float(num_elements)
@@ -20,7 +20,7 @@ he = 1/float(num_elements)
 choice = "linear"
 # choice = "quadratic"
 
-f_coeff = 1.0
+f_coeff = he/6.0
 
 node_ids = []
 for i in range(0, num_nodes):
@@ -43,25 +43,28 @@ for i, node in enumerate(Nodes.nodes_list):
 
 if choice == "constant":
     f = funcs.constant
-    fab = funcs.fe_constant
-    f_coeff = he/2.0
+    # fab = funcs.fe_constant
+    # f_coeff = he/2.0
+    fab = funcs.fe
     u = funcs.exact_constant
     uh_f = funcs.approx_constant
     f_string = ["----", "----"]
 elif choice == "linear":
     f = funcs.linear
-    f_coeff = he/6.0
-    fab = funcs.fe_linear
+    # f_coeff = he/6.0
+    # fab = funcs.fe_linear
+    fab = funcs.fe
     u = funcs.exact_linear
     uh_f = funcs.approx_linear
     f_string = ["x", ""]
 elif choice == "quadratic":
     f = funcs.quadratic
-    f_coeff = he/12.0
-    fab = funcs.fe_quadratic
+    # f_coeff = he/12.0
+    # fab = funcs.fe_quadratic
+    fab = funcs.fe
     u = funcs.exact_quadratic
     uh_f = funcs.approx_quadratic
-    f_string = ["----","----"]
+    f_string = ["----", "----"]
 
 
 
@@ -164,29 +167,91 @@ print "K = " + str(K_np)
 d = np.linalg.solve(K_np, F_npt)
 print "d = " + str(d)
 
-const_comp1 = 1.0
-const_comp2 = 0.0
-coeff_comp = 1.0/he
-
-# u_vec = np.zeros((1, num_elements), dtype=np.int).tolist()
+# const_comp1 = 1.0
+# const_comp2 = 0.0
+# coeff_comp = 1.0/he
+#
+# # u_vec = np.zeros((1, num_elements), dtype=np.int).tolist()
+# uh = [0, 0]
+# for e in range(0, num_elements):
+#     const = 0.0
+#     coeff = 0.0
+#     if LM[0][e] != 0.0:
+#         const += const_comp1 * d[e]
+#         coeff += -coeff_comp * d[e]
+#     if LM[1][e] != 0.0:
+#         const += const_comp2*d[e + 1]
+#         coeff += coeff_comp*d[e + 1]
+#
+#     print "uh[" + str(e) + "] = " + str(coeff) + f_string[0] + " + " + str(const) + f_string[1]
+#     uh[0] += coeff
+#     uh[1] += const
+#
+#     const_comp1 += 1.0
+#     const_comp2 -= 1.0
+# print "uh = " + str(uh[0]) + f_string[0] + " + " +  str(uh[1]) + f_string[1]
+u_he = []
+u_h = [0.0]*num_nodes
+# for e in range(0, num_elements):
+#     x1 = Nodes.nodes_list[IEN[0][e]].location
+#     x2 = Nodes.nodes_list[IEN[1][e]].location
+#
+#     if LM[0][e] != 0.0:
+#         d1 = d[e]
+#     else:
+#         d1 = 0.0
+#     if LM[1][e] != 0.0:
+#         d2 = d[e + 1]
+#     else:
+#         d2 = 0.0
+#
+#     for a in range(0, nodes_per_element):
+#         if a == 0:
+#             z = -1.0
+#         elif a == 1:
+#             z = 1.0
+#
+#         u_he = ((d1 + d2)/2.0)+(0.5*(x1+x2) + 0.5*z*he)*((d2 - d1)/2.0)
+#         u_h[e + a] += u_he
 uh = [0, 0]
+uh_cs = []
+uhz = [0, 0]
+uhz_cs = []
+
 for e in range(0, num_elements):
-    const = 0.0
-    coeff = 0.0
+    x1 = Nodes.nodes_list[IEN[0][e]].location
+    x2 = Nodes.nodes_list[IEN[1][e]].location
+
     if LM[0][e] != 0.0:
-        const += const_comp1 * d[e]
-        coeff += -coeff_comp * d[e]
+        d1 = d[e][0]
+    else:
+        d1 = 0.0
     if LM[1][e] != 0.0:
-        const += const_comp2*d[e + 1]
-        coeff += coeff_comp*d[e + 1]
+        d2 = d[e + 1][0]
+    else:
+        d2 = 0.0
+
+    coeff = ((d2 - d1)/he)
+    const = ((d2 - d1)/he)*((-x1 - x2)/2.0) + ((d2 + d1)/2.0)
 
     print "uh[" + str(e) + "] = " + str(coeff) + f_string[0] + " + " + str(const) + f_string[1]
     uh[0] += coeff
     uh[1] += const
+    uh_cs.append([coeff, const])
 
-    const_comp1 += 1.0
-    const_comp2 -= 1.0
-print "uh = " + str(uh[0]) + f_string[0] + " + " +  str(uh[1]) + f_string[1]
+    coeffz = ((d2 - d1)/2.0)
+    constz = ((d2 + d1)/2.0)
+    uhz_cs.append([coeffz, constz])
+
+    print "***uhz[" + str(e) + "] = " + str(coeffz) + "z + " + str(constz) + f_string[1]
+
+    uhz[0] += coeffz
+    uhz[1] += constz
+
+print uh
+print uhz_cs
+print uhz
+
 
 z = [0.0, 0.0, 0.0]
 w = [0.0, 0.0, 0.0]
@@ -202,6 +267,21 @@ w[2] = 5.0/9.0
 print "z = " + str(z)
 print "w = " + str(w)
 
-for i in range(0, len(w)):
-    sum = (abs(u(z[i]) - uh_f(z[i])))*(abs(u(z[i]) - uh_f(z[i])))*w[i]
-    
+err_sum = 0.0
+for e in range(0, num_elements):
+    coeffz = uhz_cs[e][0]
+    constz = uhz_cs[e][1]
+
+    for i in range(0, 3):
+        # sum = (abs(u(z[i]) - uh_f(z[i])))*(abs(u(z[i]) - uh_f(z[i])))*w[i]
+        uhz_value = coeffz*z[i] + constz
+        convert_to_z = he*z[i] + x1 + x2
+        z_cubed = convert_to_z*convert_to_z*convert_to_z
+        u_exact = (1.0/6.0)-(1.0/48.0)*z_cubed
+
+        err_temp = abs(u_exact - uhz_value)
+        err_temp = err_temp*err_temp*(he/2)*w[i]
+        err_sum += err_temp
+
+err = math.sqrt(err_sum)
+print err
