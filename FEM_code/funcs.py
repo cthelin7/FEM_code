@@ -52,6 +52,21 @@ def exact_quadratic(x):
     return u
 
 
+def d_exact_constant(x):
+    du = -x
+    return du
+
+
+def d_exact_linear(x):
+    du = 0.5*x*x
+    return du
+
+
+def d_exact_quadratic(x):
+    du = -1/3.0*x*x*x
+    return du
+
+
 def approx_constant(x, coeff1, coeff2):
     pass
 

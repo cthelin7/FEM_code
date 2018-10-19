@@ -3,6 +3,7 @@ import Elements
 import Nodes
 import funcs
 import math
+import matplotlib.pyplot as plt
 
 g = 0.0
 h = -0.0
@@ -11,14 +12,14 @@ h = -0.0
 # u(1) = 0      ------ ng = last, x = 1     ----- ng_id = num_nodes
 # -ux(0) = 0    ------ nh = first, x = 0    ----- nh_id = 1
 
-num_elements = 1000
+num_elements = 10000
 nodes_per_element = 2
 num_nodes = nodes_per_element*num_elements - (num_elements - 1)
 he = 1/float(num_elements)
 
 # choice = "constant"
-choice = "linear"
-# choice = "quadratic"
+# choice = "linear"
+choice = "quadratic"
 
 f_coeff = he/6.0
 
@@ -41,25 +42,28 @@ active_nodes = []
 for i, node in enumerate(node_ids):
     if node != ng_id:
         active_nodes.append(node)
-    else:
-        print "GOT THE G NODE"
+    # else:
+    #     print "GOT THE G NODE"
 
 if choice == "constant":
     f = funcs.constant
     fab = funcs.fe
     u = funcs.exact_constant
+    du = funcs.d_exact_constant
     uh_f = funcs.approx_constant
     f_string = ["----", "----"]
 elif choice == "linear":
     f = funcs.linear
     fab = funcs.fe
     u = funcs.exact_linear
+    du = funcs.d_exact_linear
     uh_f = funcs.approx_linear
     f_string = ["x", ""]
 elif choice == "quadratic":
     f = funcs.quadratic
     fab = funcs.fe
     u = funcs.exact_quadratic
+    du = funcs.d_exact_quadratic
     uh_f = funcs.approx_quadratic
     f_string = ["----", "----"]
 
@@ -104,8 +108,8 @@ for e in range(0, len(Elements.elements_list)):
     for a in range(0, nodes_per_element):
         for i in range(0, len(ID[0])):
             if IEN[a][e] == ID[0][i]:
-                if ID[1][i] == num_nodes:
-                    print "HEY"
+                # if ID[1][i] == num_nodes:
+                #     print "HEY"
                 LM[a][e] = ID[1][i]        # likely a better numpy way to do this
 
 for e in range(0, num_elements):
@@ -116,8 +120,8 @@ for e in range(0, num_elements):
     fe = [0, 0]
     fe = fab(f_coeff, f(x1), f(x2))
 
-    if e == num_elements - 1:
-        print "last one"
+    # if e == num_elements - 1:
+    #     print "last one"
     # print e, fe
     # assemble into global arrays
     for a in range(0, nodes_per_element):
@@ -145,17 +149,17 @@ for e in range(0, num_elements):
 
 F_np = np.asarray([F])
 F_npt = np.ndarray.transpose(F_np)
-print "F = " + str(F_npt)
+# print "F = " + str(F_npt)
 K_np = np.asarray(K)
-print "K = " + str(K_np)
+# print "K = " + str(K_np)
 
 d = np.linalg.solve(K_np, F_npt)
-print "d = " + str(d)
+# print "d = " + str(d)
 
 # add the known value for the right boundary
 d = np.append(d, 0.0)
 
-print "d = " + str(d)
+# print "d = " + str(d)
 
 z = [0.0, 0.0, 0.0]
 w = [0.0, 0.0, 0.0]
@@ -168,10 +172,13 @@ w[0] = 5.0/9.0
 w[1] = 8.0/9.0
 w[2] = 5.0/9.0
 
-print "z = " + str(z)
-print "w = " + str(w)
+# print "z = " + str(z)
+# print "w = " + str(w)
 
 error = 0.0
+d_error = 0.0
+x_h = []
+y_h = []
 for e in range(0, num_elements):
     x1 = Nodes.nodes_list[IEN[0][e]].location
     x2 = Nodes.nodes_list[IEN[1][e]].location
@@ -188,9 +195,40 @@ for e in range(0, num_elements):
         duhe = (d1*funcs.dn1_el(z[i]) + d2*funcs.dn2_el(z[i]))*dz_dx
 
         diff = u(xz) - uhe
-        # d_diff = du(xz) - duhe
-        error = error + diff*diff*dx_dz*w[i]
+        d_diff = du(xz) - duhe
+        error += diff*diff*dx_dz*w[i]
+        d_error += d_diff*d_diff*0.5*he*w[i]
+
+    for this_z in range(-1, 2):
+        x_h.append((he*this_z + x1 + x2)/2.0)
+        y_h.append(d1*funcs.n1_el(this_z) + d2*funcs.n2_el(this_z))
 
 sqrt_error = math.sqrt(error)
+sqrt_d_error = math.sqrt(d_error)
+print ""
 print "error: " + str(error)
-print "sqrt_error: " + str(sqrt_error)
+print "sqrt_error (displacement error): " + str(sqrt_error)
+
+print he
+print "d_error: " + str(d_error)
+print "sqrt_d_error (derivative error): " + str(sqrt_d_error)
+
+# get exact solution values
+x = np.arange(0.0, 1.0, 0.01)
+y = u(x)
+
+# get node location values
+# x_node_loc = []
+# y_node_loc = []
+# for node in node_ids:
+#     x_node_loc.append(Nodes.nodes_list[node].location)
+#     y_node_loc.append(0)
+
+# print x
+# print y
+# plt.plot(x, y, 'r--', x_h, y_h, 'g--', x_node_loc, y_node_loc, 'bo')
+plt.plot(x, y, 'r--', x_h, y_h, 'g--')
+plt.title("f="+choice+", n="+str(num_elements))
+plt.xlabel("x")
+plt.ylabel("u(x)")
+plt.show()
