@@ -29,6 +29,7 @@ def fe_quadratic(fc, fx1, fx2):
     return fe
     # print "not ready for quadratic"
 
+
 def fe(fc, fx1, fx2):
     fe = [0, 0]
     fe[0] = fc * 2.0 * fx1 + fc * fx2
@@ -37,7 +38,8 @@ def fe(fc, fx1, fx2):
 
 
 def exact_constant(x):
-    pass
+    u = (1.0 - x*x)/2.0
+    return u
 
 
 def exact_linear(x):
@@ -46,7 +48,8 @@ def exact_linear(x):
 
 
 def exact_quadratic(x):
-    pass
+    u = (1.0 - x*x*x*x)/12.0
+    return u
 
 
 def approx_constant(x, coeff1, coeff2):
@@ -66,6 +69,15 @@ def n1_el(z):
     n1 = 0.5*(1-z)
     return n1
 
+
 def n2_el(z):
     n2 = 0.5*(1+z)
     return n2
+
+
+def dn1_el(z):
+    return -0.5
+
+
+def dn2_el(z):
+    return 0.5

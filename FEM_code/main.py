@@ -11,7 +11,7 @@ h = -0.0
 # u(1) = 0      ------ ng = last, x = 1     ----- ng_id = num_nodes
 # -ux(0) = 0    ------ nh = first, x = 0    ----- nh_id = 1
 
-num_elements = 200
+num_elements = 1000
 nodes_per_element = 2
 num_nodes = nodes_per_element*num_elements - (num_elements - 1)
 he = 1/float(num_elements)
@@ -37,36 +37,31 @@ nh = Nodes.nodes_list[nh_id]
 
 # determine active nodes
 active_nodes = []
-for i, node in enumerate(Nodes.nodes_list):
-    if node is not ng_id:
+# for i, node in enumerate(Nodes.nodes_list):
+for i, node in enumerate(node_ids):
+    if node != ng_id:
         active_nodes.append(node)
+    else:
+        print "GOT THE G NODE"
 
 if choice == "constant":
     f = funcs.constant
-    # fab = funcs.fe_constant
-    # f_coeff = he/2.0
     fab = funcs.fe
     u = funcs.exact_constant
     uh_f = funcs.approx_constant
     f_string = ["----", "----"]
 elif choice == "linear":
     f = funcs.linear
-    # f_coeff = he/6.0
-    # fab = funcs.fe_linear
     fab = funcs.fe
     u = funcs.exact_linear
     uh_f = funcs.approx_linear
     f_string = ["x", ""]
 elif choice == "quadratic":
     f = funcs.quadratic
-    # f_coeff = he/12.0
-    # fab = funcs.fe_quadratic
     fab = funcs.fe
     u = funcs.exact_quadratic
     uh_f = funcs.approx_quadratic
     f_string = ["----", "----"]
-
-
 
 # assign nodes to elements
 k = nodes_per_element - 2
@@ -91,7 +86,7 @@ ID = np.zeros((2, len(Nodes.nodes_list)), dtype=np.float16).tolist()
 glob_eq_id = 1
 for n, node_id in enumerate(node_ids):
     ID[0][n] = node_id
-    if node_id is ng_id:
+    if node_id == ng_id:
         ID[1][n] = 0
     else:
         ID[1][n] = glob_eq_id
@@ -109,24 +104,20 @@ for e in range(0, len(Elements.elements_list)):
     for a in range(0, nodes_per_element):
         for i in range(0, len(ID[0])):
             if IEN[a][e] == ID[0][i]:
+                if ID[1][i] == num_nodes:
+                    print "HEY"
                 LM[a][e] = ID[1][i]        # likely a better numpy way to do this
 
 for e in range(0, num_elements):
-    # for a in range(0, nodes_per_element):
-        # for b in range(0, num_elements):
-        #     # calc ke
-        #     ke = Elements.elements_list[e].ke(he)
-        # calc fe
-
     ke = Elements.elements_list[e].ke(he).tolist()
     x1 = Nodes.nodes_list[IEN[0][e]].location
     x2 = Nodes.nodes_list[IEN[1][e]].location
 
     fe = [0, 0]
-    # fe[0] = f_coeff * 2.0 * f(x1) + f_coeff * f(x2)
-    # fe[1] = f_coeff * f(x1) + f_coeff * 2.0* f(x2)
     fe = fab(f_coeff, f(x1), f(x2))
 
+    if e == num_elements - 1:
+        print "last one"
     # print e, fe
     # assemble into global arrays
     for a in range(0, nodes_per_element):
@@ -151,107 +142,20 @@ for e in range(0, num_elements):
             # add to F
             F[P-1] = F[P-1] + fe[a]
 
-# print F
+
 F_np = np.asarray([F])
-# print F_np
 F_npt = np.ndarray.transpose(F_np)
 print "F = " + str(F_npt)
 K_np = np.asarray(K)
-# K_np_inv = np.linalg.inv(K)
 print "K = " + str(K_np)
-# print K_np_inv
 
-# # d = K\F
-# d = K_np_inv*F_npt
-# print d
 d = np.linalg.solve(K_np, F_npt)
 print "d = " + str(d)
 
-# const_comp1 = 1.0
-# const_comp2 = 0.0
-# coeff_comp = 1.0/he
-#
-# # u_vec = np.zeros((1, num_elements), dtype=np.int).tolist()
-# uh = [0, 0]
-# for e in range(0, num_elements):
-#     const = 0.0
-#     coeff = 0.0
-#     if LM[0][e] != 0.0:
-#         const += const_comp1 * d[e]
-#         coeff += -coeff_comp * d[e]
-#     if LM[1][e] != 0.0:
-#         const += const_comp2*d[e + 1]
-#         coeff += coeff_comp*d[e + 1]
-#
-#     print "uh[" + str(e) + "] = " + str(coeff) + f_string[0] + " + " + str(const) + f_string[1]
-#     uh[0] += coeff
-#     uh[1] += const
-#
-#     const_comp1 += 1.0
-#     const_comp2 -= 1.0
-# print "uh = " + str(uh[0]) + f_string[0] + " + " +  str(uh[1]) + f_string[1]
-u_he = []
-u_h = [0.0]*num_nodes
-# for e in range(0, num_elements):
-#     x1 = Nodes.nodes_list[IEN[0][e]].location
-#     x2 = Nodes.nodes_list[IEN[1][e]].location
-#
-#     if LM[0][e] != 0.0:
-#         d1 = d[e]
-#     else:
-#         d1 = 0.0
-#     if LM[1][e] != 0.0:
-#         d2 = d[e + 1]
-#     else:
-#         d2 = 0.0
-#
-#     for a in range(0, nodes_per_element):
-#         if a == 0:
-#             z = -1.0
-#         elif a == 1:
-#             z = 1.0
-#
-#         u_he = ((d1 + d2)/2.0)+(0.5*(x1+x2) + 0.5*z*he)*((d2 - d1)/2.0)
-#         u_h[e + a] += u_he
-uh = [0, 0]
-uh_cs = []
-uhz = [0, 0]
-uhz_cs = []
+# add the known value for the right boundary
+d = np.append(d, 0.0)
 
-for e in range(0, num_elements):
-    x1 = Nodes.nodes_list[IEN[0][e]].location
-    x2 = Nodes.nodes_list[IEN[1][e]].location
-
-    if LM[0][e] != 0.0:
-        d1 = d[e][0]
-    else:
-        d1 = 0.0
-    if LM[1][e] != 0.0:
-        d2 = d[e + 1][0]
-    else:
-        d2 = 0.0
-
-    coeff = ((d2 - d1)/he)
-    const = ((d2 - d1)/he)*((-x1 - x2)/2.0) + ((d2 + d1)/2.0)
-
-    print "uh[" + str(e) + "] = " + str(coeff) + f_string[0] + " + " + str(const) + f_string[1]
-    uh[0] += coeff
-    uh[1] += const
-    uh_cs.append([coeff, const])
-
-    coeffz = ((d2 - d1)/2.0)
-    constz = ((d2 + d1)/2.0)
-    uhz_cs.append([coeffz, constz])
-
-    print "***uhz[" + str(e) + "] = " + str(coeffz) + "z + " + str(constz) + f_string[1]
-
-    uhz[0] += coeffz
-    uhz[1] += constz
-
-print uh
-print uhz_cs
-print uhz
-
+print "d = " + str(d)
 
 z = [0.0, 0.0, 0.0]
 w = [0.0, 0.0, 0.0]
@@ -267,21 +171,26 @@ w[2] = 5.0/9.0
 print "z = " + str(z)
 print "w = " + str(w)
 
-err_sum = 0.0
+error = 0.0
 for e in range(0, num_elements):
-    coeffz = uhz_cs[e][0]
-    constz = uhz_cs[e][1]
+    x1 = Nodes.nodes_list[IEN[0][e]].location
+    x2 = Nodes.nodes_list[IEN[1][e]].location
+
+    d1 = d[e]
+    d2 = d[e + 1]
+
+    dx_dz = he/2.0
+    dz_dx = 2.0/he
 
     for i in range(0, 3):
-        # sum = (abs(u(z[i]) - uh_f(z[i])))*(abs(u(z[i]) - uh_f(z[i])))*w[i]
-        uhz_value = coeffz*z[i] + constz
-        convert_to_z = he*z[i] + x1 + x2
-        z_cubed = convert_to_z*convert_to_z*convert_to_z
-        u_exact = (1.0/6.0)-(1.0/48.0)*z_cubed
+        xz = x1*funcs.n1_el(z[i]) + x2*funcs.n2_el(z[i])  # the value of x from z values
+        uhe = d1*funcs.n1_el(z[i]) + d2*funcs.n2_el(z[i])  # the value of uhe from z values
+        duhe = (d1*funcs.dn1_el(z[i]) + d2*funcs.dn2_el(z[i]))*dz_dx
 
-        err_temp = abs(u_exact - uhz_value)
-        err_temp = err_temp*err_temp*(he/2)*w[i]
-        err_sum += err_temp
+        diff = u(xz) - uhe
+        # d_diff = du(xz) - duhe
+        error = error + diff*diff*dx_dz*w[i]
 
-err = math.sqrt(err_sum)
-print err
+sqrt_error = math.sqrt(error)
+print "error: " + str(error)
+print "sqrt_error: " + str(sqrt_error)
