@@ -17,9 +17,11 @@ nodes_per_element = 2
 num_nodes = nodes_per_element*num_elements - (num_elements - 1)
 he = 1/float(num_elements)
 
-# choice = "constant"
-# choice = "linear"
-choice = "quadratic"
+p = 2
+
+# f_choice = "constant"
+f_choice = "linear"
+# f_choice = "quadratic"
 
 f_coeff = he/6.0
 
@@ -45,21 +47,21 @@ for i, node in enumerate(node_ids):
     # else:
     #     print "GOT THE G NODE"
 
-if choice == "constant":
+if f_choice == "constant":
     f = funcs.constant
     fab = funcs.fe
     u = funcs.exact_constant
     du = funcs.d_exact_constant
     uh_f = funcs.approx_constant
     f_string = ["----", "----"]
-elif choice == "linear":
+elif f_choice == "linear":
     f = funcs.linear
     fab = funcs.fe
     u = funcs.exact_linear
     du = funcs.d_exact_linear
     uh_f = funcs.approx_linear
     f_string = ["x", ""]
-elif choice == "quadratic":
+elif f_choice == "quadratic":
     f = funcs.quadratic
     fab = funcs.fe
     u = funcs.exact_quadratic
@@ -228,7 +230,7 @@ y = u(x)
 # print y
 # plt.plot(x, y, 'r--', x_h, y_h, 'g--', x_node_loc, y_node_loc, 'bo')
 plt.plot(x, y, 'r--', x_h, y_h, 'g--')
-plt.title("f="+choice+", n="+str(num_elements))
+plt.title("f=" + f_choice + ", n=" + str(num_elements))
 plt.xlabel("x")
 plt.ylabel("u(x)")
 plt.show()
