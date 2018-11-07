@@ -4,49 +4,28 @@ import Nodes
 import funcs
 import math
 import matplotlib.pyplot as plt
-
-g = 0.0
-h = -0.0
+import setup_funcs
 
 # uxx + f = 0
 # u(1) = 0      ------ ng = last, x = 1     ----- ng_id = num_nodes
 # -ux(0) = 0    ------ nh = first, x = 0    ----- nh_id = 1
 
-num_elements = 10000
-nodes_per_element = 2
-num_nodes = nodes_per_element*num_elements - (num_elements - 1)
-he = 1/float(num_elements)
+# inputs
+g = 0.0
+h = -0.0
 
-p = 2
+n_el = 3    # num nodes
+n_per_el = 3    # nodes per element
+
+P = 2
+
+n_shape_funcs = P + 1
 
 # f_choice = "constant"
 f_choice = "linear"
 # f_choice = "quadratic"
 
-f_coeff = he/6.0
-
-node_ids = []
-for i in range(0, num_nodes):
-    node = Nodes.Node(i+1)
-    node.add_location(i * he)
-    node_ids.append(i+1)
-
-
-ng_id = num_nodes
-ng = Nodes.nodes_list[ng_id]
-
-nh_id = 1
-nh = Nodes.nodes_list[nh_id]
-
-# determine active nodes
-active_nodes = []
-# for i, node in enumerate(Nodes.nodes_list):
-for i, node in enumerate(node_ids):
-    if node != ng_id:
-        active_nodes.append(node)
-    # else:
-    #     print "GOT THE G NODE"
-
+# define f(x)
 if f_choice == "constant":
     f = funcs.constant
     fab = funcs.fe
@@ -69,23 +48,56 @@ elif f_choice == "quadratic":
     uh_f = funcs.approx_quadratic
     f_string = ["----", "----"]
 
-# assign nodes to elements
-k = nodes_per_element - 2
-m = 0                                   # factor for shifting up initial node number in each element
-for i in range(1, num_elements + 1):   # go through last node in each element
-    this_element = Elements.Element(i)
-    nodes_to_add = []
-    for j in range(0, nodes_per_element):                       # go through each node in the element
-        nodes_to_add.append(Nodes.nodes_list[(i+m) + j])
-    this_element.add_nodes(nodes_to_add)
-    m += k
 
-# initialize K matrix
-K = np.zeros((len(active_nodes), len(active_nodes)), dtype=np.float16).tolist()
-# F = np.zeros((1, len(active_nodes)), dtype=np.float16)
-F = []
-for node in active_nodes:
-    F.append(0.0)
+num_nodes = n_per_el * n_el - (n_el - 1)
+he = 1/float(n_el)
+
+f_coeff = he/6.0
+
+# setup B (Bernstein basis functions)
+
+# call binomial coefficient
+setup_funcs.binomial_coeff()
+
+# setup C (extraction operator)
+Ce = setup_funcs.extraction_operator_setup(P, n_el)
+
+# call extraction operator definition function
+setup_funcs.extraction_operator_setup(P, n_el)
+
+# define quadrature rate
+quad_rate = 3.4
+
+node_ids = []
+for i in range(0, num_nodes):
+    node = Nodes.Node(i+1)
+    # node.add_location(i * he)
+    node_ids.append(i+1)
+
+ng_id = num_nodes
+ng = Nodes.nodes_list[ng_id]
+
+nh_id = 1
+nh = Nodes.nodes_list[nh_id]
+
+# determine active nodes
+active_nodes = []
+for i, node in enumerate(node_ids):
+    if node != ng_id:
+        active_nodes.append(node)
+
+# # assign nodes to elements
+# k = n_per_el - 2
+# m = 0                                   # factor for shifting up initial node number in each element
+# for i in range(1, n_el + 1):   # go through last node in each element
+#     # this_element = Elements.Element(i)
+#     nodes_to_add = []
+#     for j in range(0, n_per_el):                       # go through each node in the element
+#         nodes_to_add.append(Nodes.nodes_list[(i+m) + j])
+#     this_element.add_nodes(nodes_to_add)
+#     m += k
+
+
 
 # create ID matrix
 ID = np.zeros((2, len(Nodes.nodes_list)), dtype=np.float16).tolist()
@@ -98,23 +110,54 @@ for n, node_id in enumerate(node_ids):
         ID[1][n] = glob_eq_id
         glob_eq_id += 1
 
-# create IEN matrix (map global node ids to element ids and local node ids
-IEN = np.zeros((nodes_per_element, num_elements), dtype=np.int).tolist()
-for e in range(0, len(Elements.elements_list)):
-    for a in range(0, nodes_per_element):
-        IEN[a][e] = Elements.elements_list[e].nodes[a].node_id
 
-# create LM matrix which maps to global equation numbers
-LM = np.zeros((nodes_per_element, num_elements), dtype=np.int).tolist()
+# define IEN (map global node ids to element ids and local node ids
+IEN = np.zeros((n_el, n_shape_funcs), dtype=np.int).tolist()
+for e in range(0, n_el):
+    for a in range(0, n_shape_funcs):
+        IEN[e][a] = e + a
+
+# define LM (map to global equation numbers)
+LM = np.zeros((n_per_el, n_el), dtype=np.int).tolist()
 for e in range(0, len(Elements.elements_list)):
-    for a in range(0, nodes_per_element):
+    for a in range(0, n_per_el):
         for i in range(0, len(ID[0])):
             if IEN[a][e] == ID[0][i]:
                 # if ID[1][i] == num_nodes:
                 #     print "HEY"
                 LM[a][e] = ID[1][i]        # likely a better numpy way to do this
 
-for e in range(0, num_elements):
+
+# compute node locations
+
+# compute knot vector
+knot_v = setup_funcs.knot_vector(P, n_el)
+x_locations = setup_funcs.greville_abscissae(P, n_el, knot_v)
+
+# add locations
+for node_id in node_ids:
+    node = Nodes.nodes_list[node_id]
+    node.add_location(x_locations)
+
+# initialize K
+K = np.zeros((len(active_nodes), len(active_nodes)), dtype=np.float16).tolist()
+
+#initialize F
+F = []
+for node in active_nodes:
+    F.append(0.0)
+
+
+
+
+
+
+
+
+
+
+
+for e in range(0, n_el):
     ke = Elements.elements_list[e].ke(he).tolist()
     x1 = Nodes.nodes_list[IEN[0][e]].location
     x2 = Nodes.nodes_list[IEN[1][e]].location
@@ -122,15 +165,15 @@ for e in range(0, num_elements):
     fe = [0, 0]
     fe = fab(f_coeff, f(x1), f(x2))
 
-    # if e == num_elements - 1:
+    # if e == n_el - 1:
     #     print "last one"
     # print e, fe
     # assemble into global arrays
-    for a in range(0, nodes_per_element):
+    for a in range(0, n_per_el):
         # add to K
         P = LM[a][e]
         if P != 0:
-            for b in range(0, nodes_per_element):
+            for b in range(0, n_per_el):
                 Q = LM[b][e]
                 if Q != 0:
                     K[P-1][Q-1] = K[P-1][Q-1] + ke[a][b]  # need to loop over ke?
@@ -139,7 +182,7 @@ for e in range(0, num_elements):
             # if P == nh_id:
             #     if a == 0:
             #         fe[a] += h
-            #     elif a == nodes_per_element - 1:
+            #     elif a == n_per_el - 1:
             #         fe[a] += -h
             #
             #     if P == ng_id:
@@ -181,7 +224,7 @@ error = 0.0
 d_error = 0.0
 x_h = []
 y_h = []
-for e in range(0, num_elements):
+for e in range(0, n_el):
     x1 = Nodes.nodes_list[IEN[0][e]].location
     x2 = Nodes.nodes_list[IEN[1][e]].location
 
@@ -230,7 +273,7 @@ y = u(x)
 # print y
 # plt.plot(x, y, 'r--', x_h, y_h, 'g--', x_node_loc, y_node_loc, 'bo')
 plt.plot(x, y, 'r--', x_h, y_h, 'g--')
-plt.title("f=" + f_choice + ", n=" + str(num_elements))
+plt.title("f=" + f_choice + ", n=" + str(n_el))
 plt.xlabel("x")
 plt.ylabel("u(x)")
 plt.show()
