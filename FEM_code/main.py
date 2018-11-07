@@ -49,7 +49,7 @@ elif f_choice == "quadratic":
     f_string = ["----", "----"]
 
 
-num_nodes = n_per_el * n_el - (n_el - 1)
+# num_nodes = n_per_el * n_el - (n_el - 1)
 he = 1/float(n_el)
 
 f_coeff = he/6.0
@@ -57,7 +57,7 @@ f_coeff = he/6.0
 # setup B (Bernstein basis functions)
 
 # call binomial coefficient
-setup_funcs.binomial_coeff()
+# setup_funcs.bernstein()
 
 # setup C (extraction operator)
 Ce = setup_funcs.extraction_operator_setup(P, n_el)
@@ -66,49 +66,70 @@ Ce = setup_funcs.extraction_operator_setup(P, n_el)
 setup_funcs.extraction_operator_setup(P, n_el)
 
 # define quadrature rate
-quad_rate = 3.4
+quad_rate = 3
 
-node_ids = []
-for i in range(0, num_nodes):
-    node = Nodes.Node(i+1)
-    # node.add_location(i * he)
-    node_ids.append(i+1)
+
+# compute node locations
+# compute knot vector
+knot_v = setup_funcs.knot_vector(P, n_el)
+x_locations = setup_funcs.greville_abscissae(P, n_el, knot_v)
+num_nodes = len(x_locations)
+
 
 ng_id = num_nodes
-ng = Nodes.nodes_list[ng_id]
+# ng = Nodes.nodes_list[ng_id]
 
 nh_id = 1
-nh = Nodes.nodes_list[nh_id]
+# nh = Nodes.nodes_list[nh_id]
 
-# determine active nodes
+node_ids = []
 active_nodes = []
-for i, node in enumerate(node_ids):
-    if node != ng_id:
+for i, x_loc in enumerate(x_locations):
+    node = Nodes.Node(i + 1)
+    node.add_location(x_loc)
+    node_ids.append(i + 1)
+    if node.node_id != ng_id:
         active_nodes.append(node)
 
-# # assign nodes to elements
-# k = n_per_el - 2
-# m = 0                                   # factor for shifting up initial node number in each element
-# for i in range(1, n_el + 1):   # go through last node in each element
-#     # this_element = Elements.Element(i)
-#     nodes_to_add = []
-#     for j in range(0, n_per_el):                       # go through each node in the element
-#         nodes_to_add.append(Nodes.nodes_list[(i+m) + j])
-#     this_element.add_nodes(nodes_to_add)
-#     m += k
+ng = Nodes.nodes_list[ng_id]
+nh = Nodes.nodes_list[nh_id]
+
+
+#
+#
+#
+#
+# # # add locations
+# # for node_id in node_ids:
+# #     node = Nodes.nodes_list[node_id]
+# #     node.add_location(x_locations)
+#
+#
+# # determine active nodes
+# active_nodes = []
+# for i, node in enumerate(node_ids):
+#     if node != ng_id:
+#         active_nodes.append(node)
 
 
 
 # create ID matrix
-ID = np.zeros((2, len(Nodes.nodes_list)), dtype=np.float16).tolist()
+ID = np.zeros((len(Nodes.nodes_list),2), dtype=np.float16).tolist()
 glob_eq_id = 1
 for n, node_id in enumerate(node_ids):
-    ID[0][n] = node_id
+    ID[n][0] = node_id
     if node_id == ng_id:
-        ID[1][n] = 0
+        ID[n][1] = 0
     else:
-        ID[1][n] = glob_eq_id
+        ID[n][1] = glob_eq_id
         glob_eq_id += 1
+# for n, node_id in enumerate(node_ids):
+#     ID[0][n] = node_id
+#     if Nodes.nodes_list[node_id] == active_nodes[n]:
+#         ID[1][n] = glob_eq_id
+#         glob_eq_id += 1
+#     else:
+#         ID[1][n] = 0
 
 
 # define IEN (map global node ids to element ids and local node ids
@@ -118,26 +139,17 @@ for e in range(0, n_el):
         IEN[e][a] = e + a
 
 # define LM (map to global equation numbers)
-LM = np.zeros((n_per_el, n_el), dtype=np.int).tolist()
-for e in range(0, len(Elements.elements_list)):
-    for a in range(0, n_per_el):
-        for i in range(0, len(ID[0])):
-            if IEN[a][e] == ID[0][i]:
-                # if ID[1][i] == num_nodes:
-                #     print "HEY"
-                LM[a][e] = ID[1][i]        # likely a better numpy way to do this
+LM = np.zeros((n_el, n_shape_funcs), dtype=np.int).tolist()
+for e in range(0, n_el):
+    for a in range(0, n_shape_funcs):
+        # for i in range(0, len(ID[0])):
+        #     if IEN[a][e] == ID[0][i]:
+        #         # if ID[1][i] == num_nodes:
+        #         #     print "HEY"
+        #         LM[a][e] = ID[1][i]        # likely a better numpy way to do this
+        LM[e][a] = ID[IEN[e][a]][1]
 
 
-# compute node locations
-
-# compute knot vector
-knot_v = setup_funcs.knot_vector(P, n_el)
-x_locations = setup_funcs.greville_abscissae(P, n_el, knot_v)
-
-# add locations
-for node_id in node_ids:
-    node = Nodes.nodes_list[node_id]
-    node.add_location(x_locations)
 
 # initialize K
 K = np.zeros((len(active_nodes), len(active_nodes)), dtype=np.float16).tolist()

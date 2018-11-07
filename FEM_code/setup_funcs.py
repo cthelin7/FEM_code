@@ -15,8 +15,8 @@ def gaussian_quadrature(P):
     return n_int
 
 
-def binomial_coeff():
-    pass
+def bernstein(P):
+    binomial_coeff = (1.0/2.0**P)
 
 
 def extraction_operator_setup(P, n_el):
