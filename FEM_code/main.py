@@ -164,6 +164,9 @@ for node in active_nodes:
 
 
 for e in range(0, n_el):
+    # B = []
+    # N = [0.0]*n_shape_funcs
+    big_N = []
     for i in range(0, len(int_points)):
         B = []
         for a in range(0, n_shape_funcs):
@@ -174,8 +177,7 @@ for e in range(0, n_el):
             for j in range(0, n_shape_funcs):
                 sum_B += Ce[e][i][j]*B[j]
             N.append(sum_B)
-
-
+        big_N.append(N)
 
 
 
