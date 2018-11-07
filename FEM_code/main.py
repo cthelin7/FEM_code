@@ -68,6 +68,8 @@ setup_funcs.extraction_operator_setup(P, n_el)
 # define quadrature rate
 quad_rate = 3
 
+int_points, int_weights = setup_funcs.gaussian_quadrature(P, quad_rate)
+
 
 # compute node locations
 # compute knot vector
@@ -160,6 +162,12 @@ for node in active_nodes:
     F.append(0.0)
 
 
+
+for e in range(0, n_el):
+    for i in range(0, len(int_points)):
+        B = []
+        for a in range(0, n_shape_funcs):
+            B.append(setup_funcs.bernstein(P, a, int_points[i]))
 
 
 

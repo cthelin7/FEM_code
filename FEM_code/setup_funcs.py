@@ -1,3 +1,5 @@
+import math
+
 def greville_abscissae(P, num_elems, knots):
     x = []
     for a in range(0, num_elems + 2):
@@ -9,15 +11,28 @@ def greville_abscissae(P, num_elems, knots):
     return x
 
 
-def gaussian_quadrature(P):
-    n_int = P - 1
+def gaussian_quadrature(P, quad_rate):
+    # n_int = P - 1
     # compute zi and w...
-    return n_int
+    if quad_rate == 1:
+        z = [0]
+        w = [2]
+    elif quad_rate == 2:
+        z = [-1.0/math.sqrt(3.0), 1.0/math.sqrt(3.0)]
+        w = [1, 1]
+    elif quad_rate == 3:
+        z = [-math.sqrt(3./5.), 0, math.sqrt(3./5.)]
+        w = [5./9., 8./9., 5./9.]
+    return z, w
 
 
-def bernstein(P):
-    binomial_coeff = (1.0/2.0**P)
-
+def bernstein(P, a, z):
+    # binomial_coeff = math.factorial(P)/(math.factorial(a-1)*math.factorial(P + 1 -a))
+    # z_portion = (1.0/(2.0**P))*((1-z)**(P-(a-1)))*((1+z)**(a-1))
+    binomial_coeff = math.factorial(P) / (math.factorial(a) * math.factorial(P - a))
+    z_portion = (1.0 / (2.0 ** P)) * ((1 - z) ** (P - a)) * ((1 + z) ** (a))
+    bernie = binomial_coeff*z_portion
+    return bernie
 
 def extraction_operator_setup(P, n_el):
     Ce = []
