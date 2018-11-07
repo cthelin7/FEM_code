@@ -1,8 +1,8 @@
 def greville_abscissae(P, num_elems, knots):
     x = []
-    for a in range(0, num_elems + 1):
+    for a in range(0, num_elems + 2):
         x_ag = 0.0
-        for i in range(1, P + 2):
+        for i in range(1, P + 1):
             x_ag += knots[a + i]
         x_ag *= (1/float(P))
         x.append(x_ag)
