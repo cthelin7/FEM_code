@@ -168,8 +168,12 @@ for e in range(0, n_el):
         B = []
         for a in range(0, n_shape_funcs):
             B.append(setup_funcs.bernstein(P, a, int_points[i]))
-
-
+        N = []
+        for i in range(0, n_shape_funcs):
+            sum_B = 0.0
+            for j in range(0, n_shape_funcs):
+                sum_B += Ce[e][i][j]*B[j]
+            N.append(sum_B)
 
 
 

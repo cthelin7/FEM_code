@@ -29,7 +29,7 @@ def gaussian_quadrature(P, quad_rate):
 def bernstein(P, a, z):
     # binomial_coeff = math.factorial(P)/(math.factorial(a-1)*math.factorial(P + 1 -a))
     # z_portion = (1.0/(2.0**P))*((1-z)**(P-(a-1)))*((1+z)**(a-1))
-    binomial_coeff = math.factorial(P) / (math.factorial(a) * math.factorial(P - a))
+    binomial_coeff = math.factorial(P) / (math.factorial(a) * math.factorial(P - a))    # changed (a-1) to a b/c base 0
     z_portion = (1.0 / (2.0 ** P)) * ((1 - z) ** (P - a)) * ((1 + z) ** (a))
     bernie = binomial_coeff*z_portion
     return bernie
