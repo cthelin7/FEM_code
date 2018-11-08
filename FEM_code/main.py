@@ -166,8 +166,9 @@ for node in active_nodes:
 for e in range(0, n_el):
     # B = []
     # N = [0.0]*n_shape_funcs
-    big_N = []
-    big_dN = []
+    Ne_list = []
+    dNe_list = []
+    d2Ne_list = []
     for i in range(0, len(int_points)):
         B = []
         for a in range(0, n_shape_funcs):
@@ -178,7 +179,7 @@ for e in range(0, n_el):
             for j in range(0, n_shape_funcs):
                 sum_B += Ce[e][n][j]*B[j]
             N.append(sum_B)
-        big_N.append(N)
+        Ne_list.append(N)
 
         dB = []
         for a in range(0, n_shape_funcs):
@@ -189,7 +190,18 @@ for e in range(0, n_el):
             for j in range(0, n_shape_funcs):
                 sum_dB += Ce[e][n][j] * dB[j]
             dN.append(sum_dB)
-        big_dN.append(dN)
+        dNe_list.append(dN)
+
+        d2B = []
+        for a in range(0, n_shape_funcs):
+            d2B.append(setup_funcs.d2_bernstein(P, a, int_points[i]))
+        d2N = []
+        for n in range(0, n_shape_funcs):
+            sum_d2B = 0.0
+            for j in range(0, n_shape_funcs):
+                sum_d2B += Ce[e][n][j] * d2B[j]
+            d2N.append(sum_d2B)
+        d2Ne_list.append(d2N)
 
         for a in range(0, P):
             # sum the xa*Na

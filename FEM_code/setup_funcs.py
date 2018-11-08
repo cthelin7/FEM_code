@@ -36,15 +36,26 @@ def bernstein(P, a, z):
     bernie = binomial_coeff*z_portion
     return bernie
 
+
 def d_bernstein(P, a, z):
-    # binomial_coeff = math.factorial(P)/(math.factorial(a-1)*math.factorial(P + 1 -a))
-    # z_portion = (1.0/(2.0**P))*((1-z)**(P-(a-1)))*((1+z)**(a-1))
     binomial_coeff = math.factorial(P) / (math.factorial(a) * math.factorial(P - a))    # changed (a-1) to a b/c base 0
-    z_portion = (1.0 / (2.0**P)) * binomial_coeff \
+    z_portion = (1.0 / (2.0**P)) \
                 * (((-1.0) * (P - a) * ((1.0 - z)**(P - a - 1.0)) * ((1.0 + z)**(a))) \
                 + ((a) * (1.0) * ((1.0 - z)**(P - a)) * ((1.0 + z)**(a - 1.0))))
-    d_bernie = z_portion
+    d_bernie = binomial_coeff * z_portion
     return d_bernie
+
+
+def d2_bernstein(P, a, z):
+    binomial_coeff = math.factorial(P) / (math.factorial(a) * math.factorial(P - a))    # changed (a-1) to a b/c base 0
+    p2_coeff = (1.0 / (2.0**P))
+    z1 = (1/(1.0-z))*((P-a)*(P-a-1.)*((1.-z)**(P-a-1.))*((1.+z)**a))
+    z2 = -(1/(1.0+z))*((P-a)*((1.-z)**(P-a-1.))*(a)*((1.+z)**a))
+    z3 = -(1/(1.0-z))*((a)*((1.-z)**(P-a))*(P-a)*((1.+z)**(a-1.)))
+    z4 = (1/(1.0+z))*((a)*((1.-z)**(P-a))*(a-1.)*((1.+z)**(a-1.)))
+    z_portion = z1 + z2 + z3 + z4
+    d2_bernie = binomial_coeff * p2_coeff * z_portion
+    return d2_bernie
 
 def extraction_operator_setup(P, n_el):
     Ce = []
