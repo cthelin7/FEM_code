@@ -167,20 +167,33 @@ for e in range(0, n_el):
     # B = []
     # N = [0.0]*n_shape_funcs
     big_N = []
+    big_dN = []
     for i in range(0, len(int_points)):
         B = []
         for a in range(0, n_shape_funcs):
             B.append(setup_funcs.bernstein(P, a, int_points[i]))
         N = []
-        for i in range(0, n_shape_funcs):
+        for n in range(0, n_shape_funcs):
             sum_B = 0.0
             for j in range(0, n_shape_funcs):
-                sum_B += Ce[e][i][j]*B[j]
+                sum_B += Ce[e][n][j]*B[j]
             N.append(sum_B)
         big_N.append(N)
 
+        dB = []
+        for a in range(0, n_shape_funcs):
+            dB.append(setup_funcs.d_bernstein(P, a, int_points[i]))
+        dN = []
+        for n in range(0, n_shape_funcs):
+            sum_dB = 0.0
+            for j in range(0, n_shape_funcs):
+                sum_dB += Ce[e][n][j] * dB[j]
+            dN.append(sum_dB)
+        big_dN.append(dN)
 
-
+        for a in range(0, P):
+            # sum the xa*Na
+            pass
 
 
 for e in range(0, n_el):

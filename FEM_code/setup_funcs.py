@@ -30,9 +30,21 @@ def bernstein(P, a, z):
     # binomial_coeff = math.factorial(P)/(math.factorial(a-1)*math.factorial(P + 1 -a))
     # z_portion = (1.0/(2.0**P))*((1-z)**(P-(a-1)))*((1+z)**(a-1))
     binomial_coeff = math.factorial(P) / (math.factorial(a) * math.factorial(P - a))    # changed (a-1) to a b/c base 0
-    z_portion = (1.0 / (2.0 ** P)) * ((1 - z) ** (P - a)) * ((1 + z) ** (a))
+    z_portion = (1.0 / (2.0**P)) \
+                * ((1 - z)**(P - a)) \
+                * ((1 + z)**(a))
     bernie = binomial_coeff*z_portion
     return bernie
+
+def d_bernstein(P, a, z):
+    # binomial_coeff = math.factorial(P)/(math.factorial(a-1)*math.factorial(P + 1 -a))
+    # z_portion = (1.0/(2.0**P))*((1-z)**(P-(a-1)))*((1+z)**(a-1))
+    binomial_coeff = math.factorial(P) / (math.factorial(a) * math.factorial(P - a))    # changed (a-1) to a b/c base 0
+    z_portion = (1.0 / (2.0**P)) * binomial_coeff \
+                * (((-1.0) * (P - a) * ((1.0 - z)**(P - a - 1.0)) * ((1.0 + z)**(a))) \
+                + ((a) * (1.0) * ((1.0 - z)**(P - a)) * ((1.0 + z)**(a - 1.0))))
+    d_bernie = z_portion
+    return d_bernie
 
 def extraction_operator_setup(P, n_el):
     Ce = []
