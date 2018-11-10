@@ -22,7 +22,7 @@ P = 2
 n_shape_funcs = P + 1
 
 # f_choice = "constant"
-f_choice = "linear"
+f_choice = "quadratic"
 # f_choice = "quadratic"
 
 # define f(x)
@@ -68,7 +68,7 @@ setup_funcs.extraction_operator_setup(P, n_el)
 # define quadrature rate
 quad_rate = 3
 
-int_points, int_weights = setup_funcs.gaussian_quadrature(P, quad_rate)
+int_points, w = setup_funcs.gaussian_quadrature(P, quad_rate)
 
 
 # compute node locations
@@ -134,7 +134,8 @@ for n, node_id in enumerate(node_ids):
 #         ID[1][n] = 0
 
 
-# define IEN (map global node ids to element ids and local node ids
+# define IEN (map global node ids to element ids and local node ids)
+# a = num of shape function in element
 IEN = np.zeros((n_el, n_shape_funcs), dtype=np.int).tolist()
 for e in range(0, n_el):
     for a in range(0, n_shape_funcs):
@@ -144,12 +145,7 @@ for e in range(0, n_el):
 LM = np.zeros((n_el, n_shape_funcs), dtype=np.int).tolist()
 for e in range(0, n_el):
     for a in range(0, n_shape_funcs):
-        # for i in range(0, len(ID[0])):
-        #     if IEN[a][e] == ID[0][i]:
-        #         # if ID[1][i] == num_nodes:
-        #         #     print "HEY"
-        #         LM[a][e] = ID[1][i]        # likely a better numpy way to do this
-        LM[e][a] = ID[IEN[e][a]][1]
+        LM[e][a] = ID[IEN[e][a]][1]     # for an element's shape function, choose the correct node in ID
 
 
 
@@ -169,6 +165,8 @@ for e in range(0, n_el):
     Ne_list = []
     dNe_list = []
     d2Ne_list = []
+
+    fe = []
     for i in range(0, len(int_points)):
         B = []
         for a in range(0, n_shape_funcs):
@@ -203,44 +201,67 @@ for e in range(0, n_el):
             d2N.append(sum_d2B)
         d2Ne_list.append(d2N)
 
-        for a in range(0, P):
+        xz = 0.0
+        for a in range(0, P + 1):
             # sum the xa*Na
-            pass
+            xe = x_locations[IEN[e][a]]
+            xz += xe*N[a]
+        print xz            # <---- should get 0.03756....
 
+        xi = x_locations[i] # ?
+        # evaluate fe
+        fz = f(xz)
 
-for e in range(0, n_el):
-    ke = Elements.elements_list[e].ke(he).tolist()
-    x1 = Nodes.nodes_list[IEN[0][e]].location
-    x2 = Nodes.nodes_list[IEN[1][e]].location
+        ke = []
+        for a in range(0, P + 1):
+            for b in range(0, P + 1):
+                ke[a][b] += dN[a]*dN[b]*(2.0/he)*w[i]
 
-    fe = [0, 0]
-    fe = fab(f_coeff, f(x1), f(x2))
+            # fe[a] += N[a]*f[int_points[i]]*(he/2.0)*w[i]
+            fe[a] += N[a] * fz * (he / 2.0) * w[i]
 
-    # if e == n_el - 1:
-    #     print "last one"
-    # print e, fe
-    # assemble into global arrays
-    for a in range(0, n_per_el):
-        # add to K
-        P = LM[a][e]
-        if P != 0:
-            for b in range(0, n_per_el):
-                Q = LM[b][e]
-                if Q != 0:
-                    K[P-1][Q-1] = K[P-1][Q-1] + ke[a][b]  # need to loop over ke?
+    for a in range(0, P + 1):
+        if LM[e][a] > 0.0:
+            F[LM[e][a]] += fe[a]
 
-            # # Compute boundary conditions (none in this example)
-            # if P == nh_id:
-            #     if a == 0:
-            #         fe[a] += h
-            #     elif a == n_per_el - 1:
-            #         fe[a] += -h
-            #
-            #     if P == ng_id:
-            #         if
+        for b in range(0, P + 1):
+            K[LM[e][a]][LM[e][b]] += ke[a][b]
 
-            # add to F
-            F[P-1] = F[P-1] + fe[a]
+#############OLD
+
+# for e in range(0, n_el):
+#     ke = Elements.elements_list[e].ke(he).tolist()
+#     x1 = Nodes.nodes_list[IEN[0][e]].location
+#     x2 = Nodes.nodes_list[IEN[1][e]].location
+#
+#     fe = [0, 0]
+#     fe = fab(f_coeff, f(x1), f(x2))
+#
+#     # if e == n_el - 1:
+#     #     print "last one"
+#     # print e, fe
+#     # assemble into global arrays
+#     for a in range(0, n_per_el):
+#         # add to K
+#         P = LM[a][e]
+#         if P != 0:
+#             for b in range(0, n_per_el):
+#                 Q = LM[b][e]
+#                 if Q != 0:
+#                     K[P-1][Q-1] = K[P-1][Q-1] + ke[a][b]  # need to loop over ke?
+#
+#             # # Compute boundary conditions (none in this example)
+#             # if P == nh_id:
+#             #     if a == 0:
+#             #         fe[a] += h
+#             #     elif a == n_per_el - 1:
+#             #         fe[a] += -h
+#             #
+#             #     if P == ng_id:
+#             #         if
+#
+#             # add to F
+#             F[P-1] = F[P-1] + fe[a]
 
 
 F_np = np.asarray([F])
