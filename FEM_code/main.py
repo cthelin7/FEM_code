@@ -166,7 +166,14 @@ for e in range(0, n_el):
     dNe_list = []
     d2Ne_list = []
 
-    fe = []
+    fe = [0.0]*(P + 1)
+    ke = []
+    for a in range(0, P + 1):
+        ke_col = []
+        for b in range(0, P + 1):
+            ke_col.append(0.0)
+        ke.append(ke_col)
+
     for i in range(0, len(int_points)):
         B = []
         for a in range(0, n_shape_funcs):
@@ -206,26 +213,33 @@ for e in range(0, n_el):
             # sum the xa*Na
             xe = x_locations[IEN[e][a]]
             xz += xe*N[a]
-        print xz            # <---- should get 0.03756....
+        # print xz            # <---- should get 0.03756....
 
         xi = x_locations[i] # ?
         # evaluate fe
         fz = f(xz)
 
-        ke = []
+
         for a in range(0, P + 1):
             for b in range(0, P + 1):
                 ke[a][b] += dN[a]*dN[b]*(2.0/he)*w[i]
 
             # fe[a] += N[a]*f[int_points[i]]*(he/2.0)*w[i]
             fe[a] += N[a] * fz * (he / 2.0) * w[i]
+        print str(e) + " " + str(i)
+        # print fe
+    for row in ke:
+        print row
+    print " "
 
     for a in range(0, P + 1):
         if LM[e][a] > 0.0:
-            F[LM[e][a]] += fe[a]
-
-        for b in range(0, P + 1):
-            K[LM[e][a]][LM[e][b]] += ke[a][b]
+            for b in range(0, P + 1):
+                if LM[e][b] > 0.0:
+                    K[LM[e][a] - 1][LM[e][b] - 1] += ke[a][b]
+            F[LM[e][a] - 1] += fe[a]
+    for row in K:
+        print row
 
 #############OLD
 
@@ -275,6 +289,7 @@ d = np.linalg.solve(K_np, F_npt)
 
 # add the known value for the right boundary
 d = np.append(d, 0.0)
+print d
 
 # print "d = " + str(d)
 
