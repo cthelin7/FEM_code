@@ -157,14 +157,16 @@ F = []
 for node in active_nodes:
     F.append(0.0)
 
-
+all_Ne = []
+all_dNe = []
+all_d2Ne = []
 
 for e in range(0, n_el):
     # B = []
     # N = [0.0]*n_shape_funcs
-    Ne_list = []
-    dNe_list = []
-    d2Ne_list = []
+    this_Ne = []
+    this_dNe = []
+    this_d2Ne = []
 
     fe = [0.0]*(P + 1)
     ke = []
@@ -184,7 +186,7 @@ for e in range(0, n_el):
             for j in range(0, n_shape_funcs):
                 sum_B += Ce[e][n][j]*B[j]
             N.append(sum_B)
-        Ne_list.append(N)
+        this_Ne.append(N)
 
         dB = []
         for a in range(0, n_shape_funcs):
@@ -195,7 +197,7 @@ for e in range(0, n_el):
             for j in range(0, n_shape_funcs):
                 sum_dB += Ce[e][n][j] * dB[j]
             dN.append(sum_dB)
-        dNe_list.append(dN)
+        this_dNe.append(dN)
 
         d2B = []
         for a in range(0, n_shape_funcs):
@@ -206,14 +208,13 @@ for e in range(0, n_el):
             for j in range(0, n_shape_funcs):
                 sum_d2B += Ce[e][n][j] * d2B[j]
             d2N.append(sum_d2B)
-        d2Ne_list.append(d2N)
+        this_d2Ne.append(d2N)
 
         xz = 0.0
         for a in range(0, P + 1):
             # sum the xa*Na
             xe = x_locations[IEN[e][a]]
             xz += xe*N[a]
-        # print xz            # <---- should get 0.03756....
 
         xi = x_locations[i] # ?
         # evaluate fe
@@ -231,6 +232,11 @@ for e in range(0, n_el):
     for row in ke:
         print row
     print " "
+
+    all_Ne.append(this_Ne)
+    all_dNe.append(this_dNe)
+    all_d2Ne.append(this_d2Ne)
+
 
     for a in range(0, P + 1):
         if LM[e][a] > 0.0:
@@ -291,49 +297,84 @@ d = np.linalg.solve(K_np, F_npt)
 d = np.append(d, 0.0)
 print d
 
-# print "d = " + str(d)
-
-z = [0.0, 0.0, 0.0]
-w = [0.0, 0.0, 0.0]
-
-z[0] = -math.sqrt(3.0/5.0)
-z[1] = 0.0
-z[2] = math.sqrt(3.0/5.0)
-
-w[0] = 5.0/9.0
-w[1] = 8.0/9.0
-w[2] = 5.0/9.0
-
-# print "z = " + str(z)
-# print "w = " + str(w)
-
 error = 0.0
 d_error = 0.0
-x_h = []
-y_h = []
 for e in range(0, n_el):
-    x1 = Nodes.nodes_list[IEN[0][e]].location
-    x2 = Nodes.nodes_list[IEN[1][e]].location
+    for i in range(0, len(int_points)):
 
-    d1 = d[e]
-    d2 = d[e + 1]
+        xz = 0.0
+        this_Ne = all_Ne[e][i]
+        this_dNe = all_dNe[e][i]
+        u_exact = 0.0
+        for a in range(0, P + 1):
+            # sum the xa*Na
+            xe = x_locations[IEN[e][a]]
+            xz += xe * this_Ne[a]
 
-    dx_dz = he/2.0
-    dz_dx = 2.0/he
+        dx_dz = he/2.0
+        dz_dx = 2.0/he
 
-    for i in range(0, 3):
-        xz = x1*funcs.n1_el(z[i]) + x2*funcs.n2_el(z[i])  # the value of x from z values
-        uhe = d1*funcs.n1_el(z[i]) + d2*funcs.n2_el(z[i])  # the value of uhe from z values
-        duhe = (d1*funcs.dn1_el(z[i]) + d2*funcs.dn2_el(z[i]))*dz_dx
+        u_exact = u(xz)
 
-        diff = u(xz) - uhe
-        d_diff = du(xz) - duhe
-        error += diff*diff*dx_dz*w[i]
-        d_error += d_diff*d_diff*0.5*he*w[i]
+        uhe = 0.0
+        duhe = 0.0
+        for a in range(0, P + 1):
+            # uhe += d[a] * this_Ne[int_points[i]]
+            uhe += d[IEN[e][a]] * this_Ne[a]
+            # duhe += d[a] * this_dNe[int_points[i]] * dz_dx
 
-    for this_z in range(-1, 2):
-        x_h.append((he*this_z + x1 + x2)/2.0)
-        y_h.append(d1*funcs.n1_el(this_z) + d2*funcs.n2_el(this_z))
+        diff = u_exact - uhe
+        # d_diff = du(xz) - duhe
+        error += diff * diff * dx_dz * w[i]
+        # d_error += d_diff * d_diff * 0.5 * he * w[i]
+
+# print "d = " + str(d)
+
+# z = [0.0, 0.0, 0.0]
+# w = [0.0, 0.0, 0.0]
+#
+# z[0] = -math.sqrt(3.0/5.0)
+# z[1] = 0.0
+# z[2] = math.sqrt(3.0/5.0)
+#
+# w[0] = 5.0/9.0
+# w[1] = 8.0/9.0
+# w[2] = 5.0/9.0
+#
+# # print "z = " + str(z)
+# # print "w = " + str(w)
+#
+# error = 0.0
+# d_error = 0.0
+# x_h = []
+# y_h = []
+# for e in range(0, n_el):
+#     x1 = Nodes.nodes_list[IEN[0][e]].location
+#     x2 = Nodes.nodes_list[IEN[1][e]].location
+#
+#     d1 = d[e]
+#     d2 = d[e + 1]
+#
+#     dx_dz = he/2.0
+#     dz_dx = 2.0/he
+#
+#     for i in range(0, 3):
+#         xz = x1*funcs.n1_el(z[i]) + x2*funcs.n2_el(z[i])  # the value of x from z values
+#         uhe = d1*funcs.n1_el(z[i]) + d2*funcs.n2_el(z[i])  # the value of uhe from z values
+#         duhe = (d1*funcs.dn1_el(z[i]) + d2*funcs.dn2_el(z[i]))*dz_dx
+#
+#         diff = u(xz) - uhe
+#         d_diff = du(xz) - duhe
+#         error += diff*diff*dx_dz*w[i]
+#         d_error += d_diff*d_diff*0.5*he*w[i]
+#
+#     for this_z in range(-1, 2):
+#         x_h.append((he*this_z + x1 + x2)/2.0)
+#         y_h.append(d1*funcs.n1_el(this_z) + d2*funcs.n2_el(this_z))
+
+
+
+
 
 sqrt_error = math.sqrt(error)
 sqrt_d_error = math.sqrt(d_error)
