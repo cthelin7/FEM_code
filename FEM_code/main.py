@@ -238,7 +238,7 @@ for p_v in p_val:
         # print "K = " + str(K_np)
 
         d = np.linalg.solve(K_np, F_npt)
-        # print "d = " + str(d)
+        print "d = " + str(d)
 
         # add the known value for the right boundary
         d = np.append(d, 0.0)
@@ -316,7 +316,7 @@ for p_v in p_val:
 #     p2_errors.append(results[0][a][2])
 #     p3_errors.append(results[1][a][2])
 #     he_list.append(results[0][a][3])
-
+#
 # plt.plot(he_list, p2_errors, 'r',  he_list, p3_errors, 'b')
 # # plt.title("f=" + f_choice + ", n=" + str(n_el))
 # plt.xlabel("he")
@@ -324,7 +324,7 @@ for p_v in p_val:
 # plt.yscale('log')
 # plt.xscale('log')
 # plt.show()
-#
+
 #
 # plt.plot(nodes, p2_errors, 'r',  nodes, p3_errors, 'b')
 # # plt.title("f=" + f_choice + ", n=" + str(n_el))
