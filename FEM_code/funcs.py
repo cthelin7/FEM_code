@@ -7,7 +7,7 @@ def linear(x):
 
 
 def quadratic(x):
-    return x*x
+    return 10*0.005**3.0
 
 
 def fe_constant(fc, fx1, fx2):

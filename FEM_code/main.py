@@ -14,8 +14,10 @@ import setup_funcs
 g = 0.0
 h = -0.0
 
-nodes = [1, 10, 100, 1000]
-p_val = [2, 3]
+nodes = [1, 10, 100]
+p_val = [3]
+h_list = [0.1, 0.01, 0.005, 0.002, 0.001]
+E = 1000000
 
 results = []
 for p_v in p_val:
@@ -28,6 +30,11 @@ for p_v in p_val:
         P = p_v
 
         n_shape_funcs = P + 1
+
+        b = 0.005
+        h = 0.005
+
+        I = (1.0/12.0)*b*h**3.0
 
         # f_choice = "constant"
         f_choice = "quadratic"
@@ -115,9 +122,9 @@ for p_v in p_val:
                 ID[n][1] = glob_eq_id
                 glob_eq_id += 1
 
-        # # when P = 3, need an extra 0 in Id matrix
-        # if P == 3:
-        #     ID[-2][1] = 0.0
+        # when P = 3, need an extra 0 in Id matrix
+        if P == 3:
+            ID[-2][1] = 0.0 # ?????
 
         # define IEN (map global node ids to element ids and local node ids)
         IEN = np.zeros((n_el, n_shape_funcs), dtype=np.int).tolist()
@@ -203,7 +210,7 @@ for p_v in p_val:
 
                 for a in range(0, P + 1):
                     for b in range(0, P + 1):
-                        ke[a][b] += dN[a]*dN[b]*(2.0/he)*w[i]
+                        ke[a][b] += d2N[a]*d2N[b]*((2.0/he)**(-4))*w[i]
 
                     fe[a] += N[a] * fz * (he / 2.0) * w[i]
                 # print str(e) + " " + str(i)
@@ -304,28 +311,28 @@ for p_v in p_val:
         # plt.ylabel("u(x)")
         # plt.show()
     results.append(this_p_results)
-p2_errors = []
-p3_errors = []
-he_list = []
+# p2_errors = []
+# p3_errors = []
+# he_list = []
+#
+# for a in range(0, len(nodes)):
+#     p2_errors.append(results[0][a][2])
+#     p3_errors.append(results[1][a][2])
+#     he_list.append(results[0][a][3])
 
-for a in range(0, len(nodes)):
-    p2_errors.append(results[0][a][2])
-    p3_errors.append(results[1][a][2])
-    he_list.append(results[0][a][3])
-
-plt.plot(he_list, p2_errors, 'r',  he_list, p3_errors, 'b')
-# plt.title("f=" + f_choice + ", n=" + str(n_el))
-plt.xlabel("he")
-plt.ylabel("error")
-plt.xscale('log')
-plt.xscale('log')
-plt.show()
-
-
-plt.plot(nodes, p2_errors, 'r',  nodes, p3_errors, 'b')
-# plt.title("f=" + f_choice + ", n=" + str(n_el))
-plt.xlabel("nodes")
-plt.ylabel("error")
-plt.xscale('log')
-plt.xscale('log')
-plt.show()
+# plt.plot(he_list, p2_errors, 'r',  he_list, p3_errors, 'b')
+# # plt.title("f=" + f_choice + ", n=" + str(n_el))
+# plt.xlabel("he")
+# plt.ylabel("error")
+# plt.xscale('log')
+# plt.xscale('log')
+# plt.show()
+#
+#
+# plt.plot(nodes, p2_errors, 'r',  nodes, p3_errors, 'b')
+# # plt.title("f=" + f_choice + ", n=" + str(n_el))
+# plt.xlabel("nodes")
+# plt.ylabel("error")
+# plt.xscale('log')
+# plt.xscale('log')
+# plt.show()
