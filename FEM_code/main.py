@@ -15,7 +15,7 @@ g = 0.0
 h = -0.0
 
 nodes = [1, 10, 100]
-p_val = [3]
+p_val = [2]
 h_list = [0.1, 0.01, 0.005, 0.002, 0.001]
 E = 1000000
 
@@ -210,7 +210,7 @@ for p_v in p_val:
 
                 for a in range(0, P + 1):
                     for b in range(0, P + 1):
-                        ke[a][b] += d2N[a]*d2N[b]*((2.0/he)**(-4))*w[i]
+                        ke[a][b] += E*I*d2N[a]*d2N[b]*((2.0/he)**(-4))*w[i]
 
                     fe[a] += N[a] * fz * (he / 2.0) * w[i]
                 # print str(e) + " " + str(i)
