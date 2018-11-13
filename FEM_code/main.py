@@ -14,8 +14,8 @@ import setup_funcs
 g = 0.0
 h = -0.0
 
-nodes = [1, 10, 100]
-p_val = [2]
+nodes = [10]
+p_val = [3]
 h_list = [0.1, 0.01, 0.005, 0.002, 0.001]
 E = 1000000
 
@@ -75,9 +75,6 @@ for p_v in p_val:
         # setup C (extraction operator)
         Ce = setup_funcs.extraction_operator_setup(P, n_el)
 
-        # # call extraction operator definition function
-        # setup_funcs.extraction_operator_setup(P, n_el)
-
         # define quadrature rate
         quad_rate = 3
 
@@ -89,7 +86,6 @@ for p_v in p_val:
         # compute node locations
         x_locations = setup_funcs.greville_abscissae(P, n_el, knot_v)
         num_nodes = len(x_locations)
-
 
         ng_id = num_nodes
         # ng = Nodes.nodes_list[ng_id]
@@ -122,9 +118,9 @@ for p_v in p_val:
                 ID[n][1] = glob_eq_id
                 glob_eq_id += 1
 
-        # when P = 3, need an extra 0 in Id matrix
+        # when P = 3, need an extra 0 in ID matrix
         if P == 3:
-            ID[-2][1] = 0.0 # ?????
+            ID[-2][1] = 0.0     # ?????
 
         # define IEN (map global node ids to element ids and local node ids)
         IEN = np.zeros((n_el, n_shape_funcs), dtype=np.int).tolist()
@@ -139,11 +135,11 @@ for p_v in p_val:
                 LM[e][a] = ID[IEN[e][a]][1]     # for an element's shape function, choose the correct node in ID
 
         # initialize K
-        K = np.zeros((len(active_nodes), len(active_nodes)), dtype=np.float16).tolist()
+        K = np.zeros((len(active_nodes)-1, len(active_nodes)-1), dtype=np.float16).tolist()
 
         #initialize F
         F = []
-        for node in active_nodes:
+        for i in range(0, len(active_nodes) - 1):
             F.append(0.0)
 
         all_Ne = []
@@ -210,7 +206,7 @@ for p_v in p_val:
 
                 for a in range(0, P + 1):
                     for b in range(0, P + 1):
-                        ke[a][b] += E*I*d2N[a]*d2N[b]*((2.0/he)**(-4))*w[i]
+                        ke[a][b] += E*I*d2N[a]*d2N[b]*((2.0/he)**(-3))*w[i]
 
                     fe[a] += N[a] * fz * (he / 2.0) * w[i]
                 # print str(e) + " " + str(i)
@@ -246,6 +242,7 @@ for p_v in p_val:
 
         # add the known value for the right boundary
         d = np.append(d, 0.0)
+        d = np.append(d, 0.0)       # add two zeros for beam problem
         # print d
 
         error = 0.0
@@ -324,7 +321,7 @@ for p_v in p_val:
 # # plt.title("f=" + f_choice + ", n=" + str(n_el))
 # plt.xlabel("he")
 # plt.ylabel("error")
-# plt.xscale('log')
+# plt.yscale('log')
 # plt.xscale('log')
 # plt.show()
 #
@@ -333,6 +330,6 @@ for p_v in p_val:
 # # plt.title("f=" + f_choice + ", n=" + str(n_el))
 # plt.xlabel("nodes")
 # plt.ylabel("error")
-# plt.xscale('log')
+# plt.yscale('log')
 # plt.xscale('log')
 # plt.show()

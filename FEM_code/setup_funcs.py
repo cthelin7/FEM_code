@@ -62,6 +62,7 @@ def d2_bernstein(P, a, z):
     d2_bernie = binomial_coeff * p2_coeff * z_portion
     return d2_bernie
 
+
 def extraction_operator_setup(P, n_el):
     Ce = []
     if P == 2:

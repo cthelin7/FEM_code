@@ -48,7 +48,13 @@ def exact_linear(x):
 
 
 def exact_quadratic(x):
-    u = (1.0 - x*x*x*x)/12.0
+    b = 0.005
+    h = 0.005
+
+    E = 1000000
+    I = (1.0 / 12.0) * b * h ** 3.0
+    u = (10*(h**3.0)*(x**2))/(24*E*I)*(6*1-4*1*x+x**2)  # from Mechanics of Materials book
+    # u = (1.0 - x*x*x*x)/12.0
     return u
 
 
