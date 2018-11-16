@@ -264,28 +264,43 @@ for p_v in p_val:
 
         x_h = []
         y_h = []
+        # FIND THE ERROR
         for e in range(0, n_el):
             for i in range(0, len(int_points)):
 
                 xz = 0.0
-                this_Ne = all_Ne[e][i]
-                this_dNe = all_dNe[e][i]
-                # u_exact = 0.0
+                # this_Ne = all_Ne[e][i]
+                # this_dNe = all_dNe[e][i]
+                B = []
+                for a in range(0, n_shape_funcs):
+                    B.append(setup_funcs.bernstein(P, a, int_points[i]))
+                N = []
+                for n in range(0, n_shape_funcs):
+                    sum_B = 0.0
+                    for j in range(0, n_shape_funcs):
+                        sum_B += Ce[e][n][j] * B[j]
+                    N.append(sum_B)
+
                 for a in range(0, P + 1):
                     # sum the xa*Na
                     xe = x_locations[IEN[e][a]]
-                    xz += xe * this_Ne[a]
+                    # xz += xe * this_Ne[a]
+                    xz += xe * N[a]
 
                 dx_dz = he/2.0
                 dz_dx = 2.0/he
 
                 u_exact = u(xz)
+                # u_exact = (10*h_side**3.0)/(8*E*I)
+                # x_h.append(xz)
+                # y_h.append(u_exact)
 
                 uhe = 0.0
                 duhe = 0.0
                 for a in range(0, P + 1):
                     # uhe += d[a] * this_Ne[int_points[i]]
-                    uhe += d[IEN[e][a]] * this_Ne[a]
+                    # uhe += d[IEN[e][a]] * this_Ne[a]
+                    uhe += d[IEN[e][a]] * N[a]
                     # duhe += d[a] * this_dNe[int_points[i]] * dz_dx
 
                 diff = u_exact - uhe
@@ -293,9 +308,9 @@ for p_v in p_val:
                 error += diff * diff * dx_dz * w[i]
                 # d_error += d_diff * d_diff * 0.5 * he * w[i]
 
-                for this_z in range(-1, 2):
-                    x_h.append(xz)
-                    y_h.append(uhe)
+                # for this_z in range(-1, 2):
+                x_h.append(xz)
+                y_h.append(uhe)
 
 
 
@@ -316,11 +331,11 @@ for p_v in p_val:
         this_p_results.append([P, n_el, sqrt_error, he, num_nodes])
         print P, n_el, sqrt_error, he, num_nodes
 
-        # plt.plot(x, y, 'r', x_h, y_h, 'g--')
-        # plt.title("f=" + f_choice + ", n=" + str(n_el))
-        # plt.xlabel("x")
-        # plt.ylabel("u(x)")
-        # plt.show()
+        plt.plot(x, y, 'r', x_h, y_h, 'g--')
+        plt.title("P=" + str(P) + ", n=" + str(n_el))
+        plt.xlabel("x")
+        plt.ylabel("u(x)")
+        plt.show()
     results.append(this_p_results)
 p2_errors = []
 p3_errors = []
