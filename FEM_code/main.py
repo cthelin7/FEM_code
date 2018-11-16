@@ -106,7 +106,7 @@ for p_v in p_val:
                 active_nodes.append(node)
 
         ng1 = Nodes.nodes_list[ng1_id]
-        ng2 = Nodes.nodes_list[ng2_id]
+        ng2 = Nodes.nodes_list[ng2_id]  # beam problem: need an extra 0 in ID matrix
         nh = Nodes.nodes_list[nh_id]
 
 
