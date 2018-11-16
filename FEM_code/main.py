@@ -7,15 +7,15 @@ import matplotlib.pyplot as plt
 import setup_funcs
 
 # uxx + f = 0
-# u(1) = 0      ------ ng = last, x = 1     ----- ng_id = num_nodes
+# u(1) = 0      ------ ng1 = last, x = 1     ----- ng1_id = num_nodes
 # -ux(0) = 0    ------ nh = first, x = 0    ----- nh_id = 1
 
 # inputs
 g = 0.0
 h = -0.0
 
-nodes = [10]
-p_val = [3]
+nodes = [1, 10, 100, 1000]
+p_val = [2, 3]
 h_list = [0.1, 0.01, 0.005, 0.002, 0.001]
 E = 1000000
 
@@ -31,10 +31,10 @@ for p_v in p_val:
 
         n_shape_funcs = P + 1
 
-        b = 0.005
-        h = 0.005
+        b_side = 0.005
+        h_side = 0.005
 
-        I = (1.0/12.0)*b*h**3.0
+        I = (1.0/12.0)*b_side*h_side**3.0
 
         # f_choice = "constant"
         f_choice = "quadratic"
@@ -87,11 +87,14 @@ for p_v in p_val:
         x_locations = setup_funcs.greville_abscissae(P, n_el, knot_v)
         num_nodes = len(x_locations)
 
-        ng_id = num_nodes
-        # ng = Nodes.nodes_list[ng_id]
+        ng1_id = num_nodes
+        ng2_id = num_nodes - 1
+        # ng1 = Nodes.nodes_list[ng1_id]
 
         nh_id = 1
         # nh = Nodes.nodes_list[nh_id]
+
+        Nodes.nodes_list = {}
 
         node_ids = []
         active_nodes = []
@@ -99,10 +102,11 @@ for p_v in p_val:
             node = Nodes.Node(i + 1)
             node.add_location(x_loc)
             node_ids.append(i + 1)
-            if node.node_id != ng_id:
+            if node.node_id != ng1_id and node.node_id != ng2_id:
                 active_nodes.append(node)
 
-        ng = Nodes.nodes_list[ng_id]
+        ng1 = Nodes.nodes_list[ng1_id]
+        ng2 = Nodes.nodes_list[ng2_id]
         nh = Nodes.nodes_list[nh_id]
 
 
@@ -112,15 +116,15 @@ for p_v in p_val:
         glob_eq_id = 1
         for n, node_id in enumerate(node_ids):
             ID[n][0] = node_id
-            if node_id == ng_id:
+            if node_id == ng1_id or node_id == ng2_id:
                 ID[n][1] = 0
             else:
                 ID[n][1] = glob_eq_id
                 glob_eq_id += 1
 
         # when P = 3, need an extra 0 in ID matrix
-        if P == 3:
-            ID[-2][1] = 0.0     # ?????
+        # if P == 3:
+        # ID[-2][1] = 0.0     # ?????
 
         # define IEN (map global node ids to element ids and local node ids)
         IEN = np.zeros((n_el, n_shape_funcs), dtype=np.int).tolist()
@@ -135,12 +139,22 @@ for p_v in p_val:
                 LM[e][a] = ID[IEN[e][a]][1]     # for an element's shape function, choose the correct node in ID
 
         # initialize K
-        K = np.zeros((len(active_nodes)-1, len(active_nodes)-1), dtype=np.float16).tolist()
+        K = np.zeros((len(active_nodes), len(active_nodes)), dtype=np.float16).tolist()
+
+
 
         #initialize F
         F = []
-        for i in range(0, len(active_nodes) - 1):
+        for i in range(0, len(active_nodes) ):
             F.append(0.0)
+
+        print '\n'
+        print "ID: " + str(np.shape(ID))
+        print "LM: " + str(np.shape(LM))
+        print "ActNodes: " + str(len(active_nodes))
+        print "K: " + str(np.shape(K))
+        print "F: " + str(np.shape(F))
+
 
         all_Ne = []
         all_dNe = []
@@ -238,7 +252,7 @@ for p_v in p_val:
         # print "K = " + str(K_np)
 
         d = np.linalg.solve(K_np, F_npt)
-        print "d = " + str(d)
+        # print "d = " + str(d)
 
         # add the known value for the right boundary
         d = np.append(d, 0.0)
@@ -256,7 +270,7 @@ for p_v in p_val:
                 xz = 0.0
                 this_Ne = all_Ne[e][i]
                 this_dNe = all_dNe[e][i]
-                u_exact = 0.0
+                # u_exact = 0.0
                 for a in range(0, P + 1):
                     # sum the xa*Na
                     xe = x_locations[IEN[e][a]]
@@ -286,7 +300,7 @@ for p_v in p_val:
 
 
         sqrt_error = math.sqrt(error)
-        sqrt_d_error = math.sqrt(d_error)
+        # sqrt_d_error = math.sqrt(d_error)
         print ""
         # print "error: " + str(error)
         # print "sqrt_error (displacement error): " + str(sqrt_error)
@@ -308,22 +322,22 @@ for p_v in p_val:
         # plt.ylabel("u(x)")
         # plt.show()
     results.append(this_p_results)
-# p2_errors = []
-# p3_errors = []
-# he_list = []
-#
-# for a in range(0, len(nodes)):
-#     p2_errors.append(results[0][a][2])
-#     p3_errors.append(results[1][a][2])
-#     he_list.append(results[0][a][3])
-#
-# plt.plot(he_list, p2_errors, 'r',  he_list, p3_errors, 'b')
-# # plt.title("f=" + f_choice + ", n=" + str(n_el))
-# plt.xlabel("he")
-# plt.ylabel("error")
-# plt.yscale('log')
-# plt.xscale('log')
-# plt.show()
+p2_errors = []
+p3_errors = []
+he_list = []
+
+for a in range(0, len(nodes)):
+    p2_errors.append(results[0][a][2])
+    p3_errors.append(results[1][a][2])
+    he_list.append(results[0][a][3])
+
+plt.plot(he_list, p2_errors, 'r',  he_list, p3_errors, 'b')
+# plt.title("f=" + f_choice + ", n=" + str(n_el))
+plt.xlabel("he")
+plt.ylabel("error")
+plt.yscale('log')
+plt.xscale('log')
+plt.show()
 
 #
 # plt.plot(nodes, p2_errors, 'r',  nodes, p3_errors, 'b')
