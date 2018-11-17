@@ -42,26 +42,26 @@ for p_v in p_val:
 
         # define f(x)
         if f_choice == "constant":
-            f = funcs.constant
+            # f = funcs.constant
             fab = funcs.fe
-            u = funcs.exact_constant
-            du = funcs.d_exact_constant
-            uh_f = funcs.approx_constant
-            f_string = ["----", "----"]
+            # u = funcs.exact_constant
+            # du = funcs.d_exact_constant
+            # uh_f = funcs.approx_constant
+            # f_string = ["----", "----"]
         elif f_choice == "linear":
-            f = funcs.linear
+            # f = funcs.linear
             fab = funcs.fe
-            u = funcs.exact_linear
-            du = funcs.d_exact_linear
-            uh_f = funcs.approx_linear
-            f_string = ["x", ""]
+            # u = funcs.exact_linear
+            # du = funcs.d_exact_linear
+            # uh_f = funcs.approx_linear
+            # f_string = ["x", ""]
         elif f_choice == "quadratic":
             f = funcs.quadratic
             fab = funcs.fe
             u = funcs.exact_quadratic
-            du = funcs.d_exact_quadratic
-            uh_f = funcs.approx_quadratic
-            f_string = ["----", "----"]
+            # du = funcs.d_exact_quadratic
+            # uh_f = funcs.approx_quadratic
+            # f_string = ["----", "----"]
 
         he = 1/float(n_el)
 
@@ -145,7 +145,7 @@ for p_v in p_val:
 
         #initialize F
         F = []
-        for i in range(0, len(active_nodes) ):
+        for i in range(0, len(active_nodes)):
             F.append(0.0)
 
         print '\n'
@@ -213,14 +213,19 @@ for p_v in p_val:
                     xe = x_locations[IEN[e][a]]
                     xz += xe*N[a]
 
-                xi = x_locations[i] # ?
-                # evaluate fe
-                fz = f(xz)
 
+                # xi = x_locations[i] # ?
+                # evaluate fe
+                fz = f(xz, h_side)
+
+                dx_dz = he / 2.0
+                dz_dx = 2.0 / he
 
                 for a in range(0, P + 1):
                     for b in range(0, P + 1):
-                        ke[a][b] += E*I*d2N[a]*d2N[b]*((2.0/he)**(-3))*w[i]
+                        ke[a][b] += d2N[a]*E*I*d2N[b]*((2.0/he)**(-3))*w[i]
+                        # ke[a][b] += (d2N[a]-dN[a]*dx_dz)*(dx_dz**-2.)*E*I*(d2N[b]-dN[b]*dx_dz)*(1/(dx_dz**2.))*w[i]
+                        # ke[a][b] += d2N[a] * E * I * d2N[b] * ((2./he)**(-2.)) * w[i]
 
                     fe[a] += N[a] * fz * (he / 2.0) * w[i]
                 # print str(e) + " " + str(i)
@@ -252,7 +257,7 @@ for p_v in p_val:
         # print "K = " + str(K_np)
 
         d = np.linalg.solve(K_np, F_npt)
-        # print "d = " + str(d)
+        print "d = " + str(d)
 
         # add the known value for the right boundary
         d = np.append(d, 0.0)
@@ -270,7 +275,7 @@ for p_v in p_val:
 
                 xz = 0.0
                 # this_Ne = all_Ne[e][i]
-                # this_dNe = all_dNe[e][i]
+                this_dNe = all_dNe[e][i]
                 B = []
                 for a in range(0, n_shape_funcs):
                     B.append(setup_funcs.bernstein(P, a, int_points[i]))
@@ -290,7 +295,7 @@ for p_v in p_val:
                 dx_dz = he/2.0
                 dz_dx = 2.0/he
 
-                u_exact = u(xz)
+                u_exact = u(xz, h_side)
                 # u_exact = (10*h_side**3.0)/(8*E*I)
                 # x_h.append(xz)
                 # y_h.append(u_exact)
@@ -301,10 +306,11 @@ for p_v in p_val:
                     # uhe += d[a] * this_Ne[int_points[i]]
                     # uhe += d[IEN[e][a]] * this_Ne[a]
                     uhe += d[IEN[e][a]] * N[a]
+                    # uhe += d[IEN[e][a]] * this_dNe[a]
                     # duhe += d[a] * this_dNe[int_points[i]] * dz_dx
 
                 diff = u_exact - uhe
-                # d_diff = du(xz) - duhe
+                # d_diff = du(xz, h_side) - duhe
                 error += diff * diff * dx_dz * w[i]
                 # d_error += d_diff * d_diff * 0.5 * he * w[i]
 
@@ -326,16 +332,16 @@ for p_v in p_val:
 
         # get exact solution values
         x = np.arange(0.0, 1.0, 0.01)
-        y = u(x)
+        y = u(x, h_side)
 
         this_p_results.append([P, n_el, sqrt_error, he, num_nodes])
         print P, n_el, sqrt_error, he, num_nodes
 
-        plt.plot(x, y, 'r', x_h, y_h, 'g--')
-        plt.title("P=" + str(P) + ", n=" + str(n_el))
-        plt.xlabel("x")
-        plt.ylabel("u(x)")
-        plt.show()
+        # plt.plot(x, y, 'r', x_h, y_h, 'g--')
+        # plt.title("P=" + str(P) + ", n=" + str(n_el))
+        # plt.xlabel("x")
+        # plt.ylabel("u(x)")
+        # plt.show()
     results.append(this_p_results)
 p2_errors = []
 p3_errors = []
