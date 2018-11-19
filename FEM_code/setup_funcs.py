@@ -24,12 +24,13 @@ def gaussian_quadrature(P, quad_rate):
     elif quad_rate == 3:
         z = [-math.sqrt(3./5.), 0, math.sqrt(3./5.)]
         w = [5./9., 8./9., 5./9.]
+    elif quad_rate == 4:
+        z = [-(1./35.)*math.sqrt(525.-70.*math.sqrt(30.)), (1./35.)*math.sqrt(525.-70.*math.sqrt(30.)), (1./35.)*math.sqrt(525.+70.*math.sqrt(30.)), (1./35.)*math.sqrt(525.+70.*math.sqrt(30.))]
+        w = [(1./36.)*(18.+ math.sqrt(30.)), (1./36.)*(18.+ math.sqrt(30.)), (1./36.)*(18.- math.sqrt(30.)), (1./36.)*(18.- math.sqrt(30.))]
     return z, w
 
 
 def bernstein(P, a, z):
-    # binomial_coeff = math.factorial(P)/(math.factorial(a-1)*math.factorial(P + 1 -a))
-    # z_portion = (1.0/(2.0**P))*((1-z)**(P-(a-1)))*((1+z)**(a-1))
     binomial_coeff = math.factorial(P) / (math.factorial(a) * math.factorial(P - a))    # changed (a-1) to a b/c base 0
     z_portion = (1.0 / (2.0**P)) \
                 * ((1 - z)**(P - a)) \
@@ -50,10 +51,6 @@ def d_bernstein(P, a, z):
 def d2_bernstein(P, a, z):
     binomial_coeff = math.factorial(P) / (math.factorial(a) * math.factorial(P - a))    # changed (a-1) to a b/c base 0
     p2_coeff = (1.0 / (2.0**P))
-    # z1 = (1/(1.0-z))*((P-a)*(P-a-1.)*((1.-z)**(P-a-1.))*((1.+z)**a))
-    # z2 = -(1/(1.0+z))*((P-a)*((1.-z)**(P-a-1.))*(a)*((1.+z)**a))
-    # z3 = -(1/(1.0-z))*((a)*((1.-z)**(P-a))*(P-a)*((1.+z)**(a-1.)))
-    # z4 = (1/(1.0+z))*((a)*((1.-z)**(P-a))*(a-1.)*((1.+z)**(a-1.)))
 
     z1 = ((1.-z)**(P-a-2.))*((P-a)**2.)*((1.+z)**a)
     z2 = -1*((1.-z)**(P-a-2.))*(P-a)*((1.+z)**a)
@@ -62,15 +59,6 @@ def d2_bernstein(P, a, z):
     z5 = -1*((1.-z)**(P-a))*((1.+z)**(a-2.))*(a)
     z_portion = z1 + z2 + z3 + z4 + z5
 
-
-    # z1 = (P-a)*(P-a-1.)*(-1.)*(-1.)*((1.+z)**(P-a-2.))*((1.+z)**(a))
-    # z2 = (P-a)*(-1.)*((1.-z)**(P-a-1.))*(a)*(1.)*((1.+z)**(a-1.))
-    # z3 = (P-a)*(-1.)*((1.-z)**(P-a-1.))*(a)*(1.)*((1.+z)**(a-1.))
-    # z4 = ((1.-z)**(P-a))*(a)*(a-1.)*(1.)*(1.)*((1.+z)**(a-2.))
-    # z_portion = z1 + z2 + z3 + z4
-
-    # z_portion = ((z + 1)**(a-2))*((1-z)**(-a+P-2))*((4*a**2)-4*a*(P*(z+1)-z)+(P-1)*P*((z+1)**2))  # from Wolfram
-    # z_portion = ((z + 1)**(a-1))*((1-z)**(-a+P-1))*((4*(a-1)**2)-4*a*(P*(z+1)-z)+(P-1)*P*((z+1)**2))
     d2_bernie = binomial_coeff * p2_coeff * z_portion
     return d2_bernie
 

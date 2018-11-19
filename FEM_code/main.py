@@ -224,21 +224,13 @@ for p_v in p_val:
                 for a in range(0, P + 1):
                     for b in range(0, P + 1):
                         ke[a][b] += d2N[a]*E*I*d2N[b]*((2.0/he)**(-3))*w[i]
-                        # ke[a][b] += (d2N[a]-dN[a]*dx_dz)*(dx_dz**-2.)*E*I*(d2N[b]-dN[b]*dx_dz)*(1/(dx_dz**2.))*w[i]
                         # ke[a][b] += d2N[a] * E * I * d2N[b] * ((2./he)**(-2.)) * w[i]
 
                     fe[a] += N[a] * fz * (he / 2.0) * w[i]
-                # print str(e) + " " + str(i)
-                # print fe
-            # for row in ke:
-            #     print row
-            # print " "
 
             all_Ne.append(this_Ne)
             all_dNe.append(this_dNe)
             all_d2Ne.append(this_d2Ne)
-            # for row in Ce[e]:
-                # print row
 
             for a in range(0, P + 1):
                 if LM[e][a] > 0.0:
@@ -246,18 +238,15 @@ for p_v in p_val:
                         if LM[e][b] > 0.0:
                             K[LM[e][a] - 1][LM[e][b] - 1] += ke[a][b]
                     F[LM[e][a] - 1] += fe[a]
-            # for row in K:
-            #     print row
 
 
         F_np = np.asarray([F])
         F_npt = np.ndarray.transpose(F_np)
-        # print "F = " + str(F_npt)
         K_np = np.asarray(K)
-        # print "K = " + str(K_np)
+
 
         d = np.linalg.solve(K_np, F_npt)
-        print "d = " + str(d)
+        # print "d = " + str(d)
 
         # add the known value for the right boundary
         d = np.append(d, 0.0)
@@ -269,6 +258,7 @@ for p_v in p_val:
 
         x_h = []
         y_h = []
+
         # FIND THE ERROR
         for e in range(0, n_el):
             for i in range(0, len(int_points)):
@@ -297,14 +287,10 @@ for p_v in p_val:
 
                 u_exact = u(xz, h_side)
                 # u_exact = (10*h_side**3.0)/(8*E*I)
-                # x_h.append(xz)
-                # y_h.append(u_exact)
 
                 uhe = 0.0
                 duhe = 0.0
                 for a in range(0, P + 1):
-                    # uhe += d[a] * this_Ne[int_points[i]]
-                    # uhe += d[IEN[e][a]] * this_Ne[a]
                     uhe += d[IEN[e][a]] * N[a]
                     # uhe += d[IEN[e][a]] * this_dNe[a]
                     # duhe += d[a] * this_dNe[int_points[i]] * dz_dx
@@ -323,11 +309,9 @@ for p_v in p_val:
         sqrt_error = math.sqrt(error)
         # sqrt_d_error = math.sqrt(d_error)
         print ""
-        # print "error: " + str(error)
         # print "sqrt_error (displacement error): " + str(sqrt_error)
 
         # print he
-        # print "d_error: " + str(d_error)
         # print "sqrt_d_error (derivative error): " + str(sqrt_d_error)
 
         # get exact solution values
