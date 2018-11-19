@@ -14,7 +14,7 @@ import setup_funcs
 g = 0.0
 h = -0.0
 
-elements = [1,10,100]
+elements = [10]
 p_val = [2, 3]
 h_list = [0.1, 0.01, 0.005, 0.002, 0.001]
 E = 1000000
@@ -23,309 +23,310 @@ results = []
 for p_v in p_val:
     this_p_results = []
     for element_num in elements:
+        this_el_num_results = []
+        for h_side in h_list:
 
-        n_el = element_num    # num elements
-        # n_per_el = 3    # elements per element
+            n_el = element_num    # num elements
+            # n_per_el = 3    # elements per element
 
-        P = p_v
+            P = p_v
 
-        n_shape_funcs = P + 1
+            n_shape_funcs = P + 1
 
-        b_side = 0.005
-        # h_side = 0.005
+            b_side = 0.005
+            # h_side = 0.005
 
-        I = (1.0/12.0)*b_side*h_side**3.0
+            I = (1.0/12.0)*b_side*h_side**3.0
 
-        # f_choice = "constant"
-        f_choice = "quadratic"
-        # f_choice = "quadratic"
+            # f_choice = "constant"
+            f_choice = "quadratic"
+            # f_choice = "quadratic"
 
-        # define f(x)
-        if f_choice == "constant":
-            # f = funcs.constant
-            fab = funcs.fe
-            # u = funcs.exact_constant
-            # du = funcs.d_exact_constant
-            # uh_f = funcs.approx_constant
-            # f_string = ["----", "----"]
-        elif f_choice == "linear":
-            # f = funcs.linear
-            fab = funcs.fe
-            # u = funcs.exact_linear
-            # du = funcs.d_exact_linear
-            # uh_f = funcs.approx_linear
-            # f_string = ["x", ""]
-        elif f_choice == "quadratic":
-            f = funcs.quadratic
-            fab = funcs.fe
-            u = funcs.exact_quadratic
-            # du = funcs.d_exact_quadratic
-            # uh_f = funcs.approx_quadratic
-            # f_string = ["----", "----"]
+            # define f(x)
+            if f_choice == "constant":
+                # f = funcs.constant
+                fab = funcs.fe
+                # u = funcs.exact_constant
+                # du = funcs.d_exact_constant
+                # uh_f = funcs.approx_constant
+                # f_string = ["----", "----"]
+            elif f_choice == "linear":
+                # f = funcs.linear
+                fab = funcs.fe
+                # u = funcs.exact_linear
+                # du = funcs.d_exact_linear
+                # uh_f = funcs.approx_linear
+                # f_string = ["x", ""]
+            elif f_choice == "quadratic":
+                f = funcs.quadratic
+                fab = funcs.fe
+                u = funcs.exact_quadratic
+                # du = funcs.d_exact_quadratic
+                # uh_f = funcs.approx_quadratic
+                # f_string = ["----", "----"]
 
-        he = 1/float(n_el)
+            he = 1/float(n_el)
 
-        f_coeff = he/6.0
+            f_coeff = he/6.0
 
-        # setup B (Bernstein basis functions)
+            # setup B (Bernstein basis functions)
 
-        # call binomial coefficient
-        # setup_funcs.bernstein()
+            # call binomial coefficient
+            # setup_funcs.bernstein()
 
-        # setup C (extraction operator)
-        Ce = setup_funcs.extraction_operator_setup(P, n_el)
+            # setup C (extraction operator)
+            Ce = setup_funcs.extraction_operator_setup(P, n_el)
 
-        # define quadrature rate
-        quad_rate = 3
+            # define quadrature rate
+            quad_rate = 3
 
-        int_points, w = setup_funcs.gaussian_quadrature(P, quad_rate)
+            int_points, w = setup_funcs.gaussian_quadrature(P, quad_rate)
 
-        # compute knot vector
-        knot_v = setup_funcs.knot_vector(P, n_el)
+            # compute knot vector
+            knot_v = setup_funcs.knot_vector(P, n_el)
 
-        # compute node locations
-        x_locations = setup_funcs.greville_abscissae(P, n_el, knot_v)
-        num_nodes = len(x_locations)
+            # compute node locations
+            x_locations = setup_funcs.greville_abscissae(P, n_el, knot_v)
+            num_nodes = len(x_locations)
 
-        ng1_id = num_nodes
-        ng2_id = num_nodes - 1
-        # ng1 = Nodes.nodes_list[ng1_id]
+            ng1_id = num_nodes
+            ng2_id = num_nodes - 1
+            # ng1 = Nodes.nodes_list[ng1_id]
 
-        nh_id = 1
-        # nh = Nodes.nodes_list[nh_id]
+            nh_id = 1
+            # nh = Nodes.nodes_list[nh_id]
 
-        Nodes.nodes_list = {}
+            Nodes.nodes_list = {}
 
-        node_ids = []
-        active_nodes = []
-        for i, x_loc in enumerate(x_locations):
-            node = Nodes.Node(i + 1)
-            node.add_location(x_loc)
-            node_ids.append(i + 1)
-            if node.node_id != ng1_id and node.node_id != ng2_id:
-                active_nodes.append(node)
+            node_ids = []
+            active_nodes = []
+            for i, x_loc in enumerate(x_locations):
+                node = Nodes.Node(i + 1)
+                node.add_location(x_loc)
+                node_ids.append(i + 1)
+                if node.node_id != ng1_id and node.node_id != ng2_id:
+                    active_nodes.append(node)
 
-        ng1 = Nodes.nodes_list[ng1_id]
-        ng2 = Nodes.nodes_list[ng2_id]  # beam problem: need an extra 0 in ID matrix
-        nh = Nodes.nodes_list[nh_id]
+            ng1 = Nodes.nodes_list[ng1_id]
+            ng2 = Nodes.nodes_list[ng2_id]  # beam problem: need an extra 0 in ID matrix
+            nh = Nodes.nodes_list[nh_id]
 
-        # create ID matrix
-        ID = np.zeros((len(Nodes.nodes_list), 2), dtype=np.float16).tolist()
-        glob_eq_id = 1
-        for n, node_id in enumerate(node_ids):
-            ID[n][0] = node_id
-            if node_id == ng1_id or node_id == ng2_id:
-                ID[n][1] = 0
-            else:
-                ID[n][1] = glob_eq_id
-                glob_eq_id += 1
+            # create ID matrix
+            ID = np.zeros((len(Nodes.nodes_list), 2), dtype=np.float16).tolist()
+            glob_eq_id = 1
+            for n, node_id in enumerate(node_ids):
+                ID[n][0] = node_id
+                if node_id == ng1_id or node_id == ng2_id:
+                    ID[n][1] = 0
+                else:
+                    ID[n][1] = glob_eq_id
+                    glob_eq_id += 1
 
-        # when P = 3, need an extra 0 in ID matrix
-        # if P == 3:
-        # ID[-2][1] = 0.0     # ?????
+            # when P = 3, need an extra 0 in ID matrix
+            # if P == 3:
+            # ID[-2][1] = 0.0     # ?????
 
-        # define IEN (map global node ids to element ids and local node ids)
-        IEN = np.zeros((n_el, n_shape_funcs), dtype=np.int).tolist()
-        for e in range(0, n_el):
-            for a in range(0, n_shape_funcs):
-                IEN[e][a] = e + a
-
-        # define LM (map to global equation numbers)
-        LM = np.zeros((n_el, n_shape_funcs), dtype=np.int).tolist()
-        for e in range(0, n_el):
-            for a in range(0, n_shape_funcs):
-                LM[e][a] = ID[IEN[e][a]][1]     # for an element's shape function, choose the correct node in ID
-
-        # initialize K
-        K = np.zeros((len(active_nodes), len(active_nodes)), dtype=np.float16).tolist()
-
-
-
-        #initialize F
-        F = []
-        for i in range(0, len(active_nodes)):
-            F.append(0.0)
-
-        print '\n'
-        print "ID: " + str(np.shape(ID))
-        print "LM: " + str(np.shape(LM))
-        print "ActNodes: " + str(len(active_nodes))
-        print "K: " + str(np.shape(K))
-        print "F: " + str(np.shape(F))
-
-
-        all_Ne = []
-        all_dNe = []
-        all_d2Ne = []
-
-        for e in range(0, n_el):
-            this_Ne = []
-            this_dNe = []
-            this_d2Ne = []
-
-            fe = [0.0]*(P + 1)
-            ke = []
-            for a in range(0, P + 1):
-                ke_col = []
-                for b in range(0, P + 1):
-                    ke_col.append(0.0)
-                ke.append(ke_col)
-
-            for i in range(0, len(int_points)):
-                B = []
+            # define IEN (map global node ids to element ids and local node ids)
+            IEN = np.zeros((n_el, n_shape_funcs), dtype=np.int).tolist()
+            for e in range(0, n_el):
                 for a in range(0, n_shape_funcs):
-                    B.append(setup_funcs.bernstein(P, a, int_points[i]))
-                N = []
-                for n in range(0, n_shape_funcs):
-                    sum_B = 0.0
-                    for j in range(0, n_shape_funcs):
-                        sum_B += Ce[e][n][j]*B[j]
-                    N.append(sum_B)
-                this_Ne.append(N)
+                    IEN[e][a] = e + a
 
-                dB = []
+            # define LM (map to global equation numbers)
+            LM = np.zeros((n_el, n_shape_funcs), dtype=np.int).tolist()
+            for e in range(0, n_el):
                 for a in range(0, n_shape_funcs):
-                    dB.append(setup_funcs.d_bernstein(P, a, int_points[i]))
-                dN = []
-                for n in range(0, n_shape_funcs):
-                    sum_dB = 0.0
-                    for j in range(0, n_shape_funcs):
-                        sum_dB += Ce[e][n][j] * dB[j]
-                    dN.append(sum_dB)
-                this_dNe.append(dN)
+                    LM[e][a] = ID[IEN[e][a]][1]     # for an element's shape function, choose the correct node in ID
 
-                d2B = []
-                for a in range(0, n_shape_funcs):
-                    d2B.append(setup_funcs.d2_bernstein(P, a, int_points[i]))
-                # d2B = [0.5,-1.0,0.5]
-                d2N = []
-                for n in range(0, n_shape_funcs):
-                    sum_d2B = 0.0
-                    for j in range(0, n_shape_funcs):
-                        sum_d2B += Ce[e][n][j] * d2B[j]
-                    d2N.append(sum_d2B)
-                this_d2Ne.append(d2N)
+            # initialize K
+            K = np.zeros((len(active_nodes), len(active_nodes)), dtype=np.float16).tolist()
 
-                xz = 0.0
+
+
+            #initialize F
+            F = []
+            for i in range(0, len(active_nodes)):
+                F.append(0.0)
+
+            print '\n'
+            print "ID: " + str(np.shape(ID))
+            print "LM: " + str(np.shape(LM))
+            print "ActNodes: " + str(len(active_nodes))
+            print "K: " + str(np.shape(K))
+            print "F: " + str(np.shape(F))
+
+
+            all_Ne = []
+            all_dNe = []
+            all_d2Ne = []
+
+            for e in range(0, n_el):
+                this_Ne = []
+                this_dNe = []
+                this_d2Ne = []
+
+                fe = [0.0]*(P + 1)
+                ke = []
                 for a in range(0, P + 1):
-                    # sum the xa*Na
-                    xe = x_locations[IEN[e][a]]
-                    xz += xe*N[a]
-
-
-                # xi = x_locations[i] # ?
-                # evaluate fe
-                fz = f(xz, h_side)
-
-                dx_dz = he / 2.0
-                dz_dx = 2.0 / he
-
-                for a in range(0, P + 1):
+                    ke_col = []
                     for b in range(0, P + 1):
-                        ke[a][b] += d2N[a]*E*I*d2N[b]*((2.0/he)**(3))*w[i]
-                        # ke[a][b] += d2N[a] * E * I * d2N[b] * ((2./he)**(-2.)) * w[i]
+                        ke_col.append(0.0)
+                    ke.append(ke_col)
 
-                    fe[a] += N[a] * fz * (he / 2.0) * w[i]
+                for i in range(0, len(int_points)):
+                    B = []
+                    for a in range(0, n_shape_funcs):
+                        B.append(setup_funcs.bernstein(P, a, int_points[i]))
+                    N = []
+                    for n in range(0, n_shape_funcs):
+                        sum_B = 0.0
+                        for j in range(0, n_shape_funcs):
+                            sum_B += Ce[e][n][j]*B[j]
+                        N.append(sum_B)
+                    this_Ne.append(N)
 
-            all_Ne.append(this_Ne)
-            all_dNe.append(this_dNe)
-            all_d2Ne.append(this_d2Ne)
+                    dB = []
+                    for a in range(0, n_shape_funcs):
+                        dB.append(setup_funcs.d_bernstein(P, a, int_points[i]))
+                    dN = []
+                    for n in range(0, n_shape_funcs):
+                        sum_dB = 0.0
+                        for j in range(0, n_shape_funcs):
+                            sum_dB += Ce[e][n][j] * dB[j]
+                        dN.append(sum_dB)
+                    this_dNe.append(dN)
 
+                    d2B = []
+                    for a in range(0, n_shape_funcs):
+                        d2B.append(setup_funcs.d2_bernstein(P, a, int_points[i]))
+                    # d2B = [0.5,-1.0,0.5]
+                    d2N = []
+                    for n in range(0, n_shape_funcs):
+                        sum_d2B = 0.0
+                        for j in range(0, n_shape_funcs):
+                            sum_d2B += Ce[e][n][j] * d2B[j]
+                        d2N.append(sum_d2B)
+                    this_d2Ne.append(d2N)
+
+                    xz = 0.0
+                    for a in range(0, P + 1):
+                        # sum the xa*Na
+                        xe = x_locations[IEN[e][a]]
+                        xz += xe*N[a]
+
+
+                    # xi = x_locations[i] # ?
+                    # evaluate fe
+                    fz = f(xz, h_side)
+
+                    dx_dz = he / 2.0
+                    dz_dx = 2.0 / he
+
+                    for a in range(0, P + 1):
+                        for b in range(0, P + 1):
+                            ke[a][b] += d2N[a]*E*I*d2N[b]*((2.0/he)**(3))*w[i]
+                            # ke[a][b] += d2N[a] * E * I * d2N[b] * ((2./he)**(-2.)) * w[i]
+
+                        fe[a] += N[a] * fz * (he / 2.0) * w[i]
+
+                all_Ne.append(this_Ne)
+                all_dNe.append(this_dNe)
+                all_d2Ne.append(this_d2Ne)
+
+                for a in range(0, P + 1):
+                    if LM[e][a] > 0.0:
+                        for b in range(0, P + 1):
+                            if LM[e][b] > 0.0:
+                                K[LM[e][a] - 1][LM[e][b] - 1] += ke[a][b]
+                        F[LM[e][a] - 1] += fe[a]
+
+
+            F_np = np.asarray([F])
+            F_npt = np.ndarray.transpose(F_np)
+            K_np = np.asarray(K)
+
+
+            d = np.linalg.solve(K_np, F_npt)
+            # print "d = " + str(d)
+
+            # add the known value for the right boundary
+            d = np.append(d, 0.0)
+            d = np.append(d, 0.0)       # add two zeros for beam problem
+            # print d
+
+            error = 0.0
+            d_error = 0.0
+
+            x_h = []
+            y_h = []
+
+            # FIND THE ERROR
+            for e in range(0, n_el):
+                for i in range(0, len(int_points)):
+
+                    xz = 0.0
+                    # this_Ne = all_Ne[e][i]
+                    this_dNe = all_dNe[e][i]
+                    B = []
+                    for a in range(0, n_shape_funcs):
+                        B.append(setup_funcs.bernstein(P, a, int_points[i]))
+                    N = []
+                    for n in range(0, n_shape_funcs):
+                        sum_B = 0.0
+                        for j in range(0, n_shape_funcs):
+                            sum_B += Ce[e][n][j] * B[j]
+                        N.append(sum_B)
+
+                    for a in range(0, P + 1):
+                        # sum the xa*Na
+                        xe = x_locations[IEN[e][a]]
+                        # xz += xe * this_Ne[a]
+                        xz += xe * N[a]
+
+                    dx_dz = he/2.0
+                    dz_dx = 2.0/he
+
+                    u_exact = u(xz, h_side)
+                    # u_exact = (10*h_side**3.0)/(8*E*I)
+
+                    uhe = 0.0
+                    duhe = 0.0
+                    for a in range(0, P + 1):
+                        uhe += d[IEN[e][a]] * N[a]
+                        # uhe += d[IEN[e][a]] * this_dNe[a]
+                        # duhe += d[a] * this_dNe[int_points[i]] * dz_dx
+
+                    diff = u_exact - uhe
+                    # d_diff = du(xz, h_side) - duhe
+                    error += diff * diff * dx_dz * w[i]
+                    # d_error += d_diff * d_diff * 0.5 * he * w[i]
+
+                    # for this_z in range(-1, 2):
+                    x_h.append(xz)
+                    y_h.append(uhe)
+
+            tip = 0.0
             for a in range(0, P + 1):
-                if LM[e][a] > 0.0:
-                    for b in range(0, P + 1):
-                        if LM[e][b] > 0.0:
-                            K[LM[e][a] - 1][LM[e][b] - 1] += ke[a][b]
-                    F[LM[e][a] - 1] += fe[a]
+                tip += d[0] * N[a]
+            exact_tip_defl = (10*h_side**3.0)/(8*E*I)
 
+            sqrt_error = math.sqrt(error)
+            # sqrt_d_error = math.sqrt(d_error)
+            print ""
 
-        F_np = np.asarray([F])
-        F_npt = np.ndarray.transpose(F_np)
-        K_np = np.asarray(K)
+            # get exact solution values
+            x = np.arange(0.0, 1.0, 0.01)
+            y = u(x, h_side)
 
+            this_el_num_results.append([P, n_el, sqrt_error, he, num_nodes, tip, h_side])
+            print P, n_el, sqrt_error, he, num_nodes, tip, h_side
 
-        d = np.linalg.solve(K_np, F_npt)
-        # print "d = " + str(d)
-
-        # add the known value for the right boundary
-        d = np.append(d, 0.0)
-        d = np.append(d, 0.0)       # add two zeros for beam problem
-        # print d
-
-        error = 0.0
-        d_error = 0.0
-
-        x_h = []
-        y_h = []
-
-        # FIND THE ERROR
-        for e in range(0, n_el):
-            for i in range(0, len(int_points)):
-
-                xz = 0.0
-                # this_Ne = all_Ne[e][i]
-                this_dNe = all_dNe[e][i]
-                B = []
-                for a in range(0, n_shape_funcs):
-                    B.append(setup_funcs.bernstein(P, a, int_points[i]))
-                N = []
-                for n in range(0, n_shape_funcs):
-                    sum_B = 0.0
-                    for j in range(0, n_shape_funcs):
-                        sum_B += Ce[e][n][j] * B[j]
-                    N.append(sum_B)
-
-                for a in range(0, P + 1):
-                    # sum the xa*Na
-                    xe = x_locations[IEN[e][a]]
-                    # xz += xe * this_Ne[a]
-                    xz += xe * N[a]
-
-                dx_dz = he/2.0
-                dz_dx = 2.0/he
-
-                u_exact = u(xz, h_side)
-                # u_exact = (10*h_side**3.0)/(8*E*I)
-
-                uhe = 0.0
-                duhe = 0.0
-                for a in range(0, P + 1):
-                    uhe += d[IEN[e][a]] * N[a]
-                    # uhe += d[IEN[e][a]] * this_dNe[a]
-                    # duhe += d[a] * this_dNe[int_points[i]] * dz_dx
-
-                diff = u_exact - uhe
-                # d_diff = du(xz, h_side) - duhe
-                error += diff * diff * dx_dz * w[i]
-                # d_error += d_diff * d_diff * 0.5 * he * w[i]
-
-                # for this_z in range(-1, 2):
-                x_h.append(xz)
-                y_h.append(uhe)
-
-        p2_tip = []
-        p3_tip = []
-        tip = 0.0
-        for a in range(0, P + 1):
-            tip += d[0] * N[a]
-        exact_tip_defl = (10*h_side**3.0)/(8*E*I)
-
-        sqrt_error = math.sqrt(error)
-        # sqrt_d_error = math.sqrt(d_error)
-        print ""
-
-        # get exact solution values
-        x = np.arange(0.0, 1.0, 0.01)
-        y = u(x, h_side)
-
-        this_p_results.append([P, n_el, sqrt_error, he, num_nodes, tip])
-        print P, n_el, sqrt_error, he, num_nodes
-
-        plt.plot(x, y, 'r', x_h, y_h, 'g--')
-        plt.title("P=" + str(P) + ", n=" + str(n_el))
-        plt.xlabel("x")
-        plt.ylabel("u(x)")
-        plt.show()
+            plt.plot(x, y, 'r', x_h, y_h, 'g--')
+            plt.title("P=" + str(P) + ", n=" + str(n_el) + ", h=" + str(h_side))
+            plt.xlabel("x")
+            plt.ylabel("u(x)")
+            plt.show()
+        this_p_results.append(this_el_num_results)
     results.append(this_p_results)
 p2_errors = []
 p3_errors = []
@@ -335,12 +336,13 @@ p3_tip = []
 nodes = []
 
 for a in range(0, len(elements)):
-    p2_errors.append(results[0][a][2])
-    p3_errors.append(results[1][a][2])
-    he_list.append(results[0][a][3])
-    p2_tip.append(results[0][a][5])
-    p3_tip.append(results[1][a][5])
-    nodes.append(results[0][a][4])
+    for h in range(0, len(h_list)):
+        p2_errors.append(results[0][a][h][2])
+        p3_errors.append(results[1][a][h][2])
+        he_list.append(results[0][a][h][3])
+        p2_tip.append(results[0][a][h][5])
+        p3_tip.append(results[1][a][h][5])
+        nodes.append(results[0][a][0][4])
 
 plt.plot(he_list, p2_errors, 'r',  he_list, p3_errors, 'b')
 # plt.title("f=" + f_choice + ", n=" + str(n_el))
@@ -350,13 +352,23 @@ plt.yscale('log')
 plt.xscale('log')
 plt.show()
 
-exact_tip = [(10 * h_side ** 3.0) / (8 * E * I)] * len(nodes)
-
-plt.plot(nodes, p2_tip, 'r',  nodes, p3_tip, 'b', nodes, exact_tip, 'g')
-# plt.plot(nodes, p2_tip, 'r',  nodes, p3_tip, 'b')
-# plt.title("f=" + f_choice + ", n=" + str(n_el))
+plt.plot(nodes, p2_tip, 'r',  nodes, p3_tip, 'b')
+plt.title("f=" + f_choice + ", n=" + str(n_el))
 plt.xlabel("nodes")
 plt.ylabel("u(x)")
+plt.show()
+
+exact_tip = []
+beam_slenderness = []
+for h in h_list:
+    exact_tip.append((10 * (h/h) ** 3.0) / (8. * E * I))
+    beam_slenderness.append(1./h)
+
+plt.plot(beam_slenderness, p2_tip, 'r',  beam_slenderness, p3_tip, 'b', beam_slenderness, exact_tip, 'g')
+# plt.plot(nodes, p2_tip, 'r',  nodes, p3_tip, 'b')
+# plt.title("f=" + f_choice + ", n=" + str(n_el))
+plt.xlabel("beam slenderness")
+plt.ylabel("max u(x)")
 plt.show()
 
 #
