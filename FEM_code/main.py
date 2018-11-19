@@ -32,7 +32,7 @@ for p_v in p_val:
         n_shape_funcs = P + 1
 
         b_side = 0.005
-        h_side = 0.005
+        # h_side = 0.005
 
         I = (1.0/12.0)*b_side*h_side**3.0
 
@@ -303,22 +303,22 @@ for p_v in p_val:
                 x_h.append(xz)
                 y_h.append(uhe)
 
-        
-
+        p2_tip = []
+        p3_tip = []
+        tip = 0.0
+        for a in range(0, P + 1):
+            tip += d[0] * N[a]
+        exact_tip_defl = (10*h_side**3.0)/(8*E*I)
 
         sqrt_error = math.sqrt(error)
         # sqrt_d_error = math.sqrt(d_error)
         print ""
-        # print "sqrt_error (displacement error): " + str(sqrt_error)
-
-        # print he
-        # print "sqrt_d_error (derivative error): " + str(sqrt_d_error)
 
         # get exact solution values
         x = np.arange(0.0, 1.0, 0.01)
         y = u(x, h_side)
 
-        this_p_results.append([P, n_el, sqrt_error, he, num_nodes])
+        this_p_results.append([P, n_el, sqrt_error, he, num_nodes, tip])
         print P, n_el, sqrt_error, he, num_nodes
 
         plt.plot(x, y, 'r', x_h, y_h, 'g--')
@@ -330,11 +330,17 @@ for p_v in p_val:
 p2_errors = []
 p3_errors = []
 he_list = []
+p2_tip = []
+p3_tip = []
+nodes = []
 
 for a in range(0, len(elements)):
     p2_errors.append(results[0][a][2])
     p3_errors.append(results[1][a][2])
     he_list.append(results[0][a][3])
+    p2_tip.append(results[0][a][5])
+    p3_tip.append(results[1][a][5])
+    nodes.append(results[0][a][4])
 
 plt.plot(he_list, p2_errors, 'r',  he_list, p3_errors, 'b')
 # plt.title("f=" + f_choice + ", n=" + str(n_el))
@@ -342,6 +348,15 @@ plt.xlabel("he")
 plt.ylabel("error")
 plt.yscale('log')
 plt.xscale('log')
+plt.show()
+
+exact_tip = [(10 * h_side ** 3.0) / (8 * E * I)] * len(nodes)
+
+plt.plot(nodes, p2_tip, 'r',  nodes, p3_tip, 'b', nodes, exact_tip, 'g')
+# plt.plot(nodes, p2_tip, 'r',  nodes, p3_tip, 'b')
+# plt.title("f=" + f_choice + ", n=" + str(n_el))
+plt.xlabel("nodes")
+plt.ylabel("u(x)")
 plt.show()
 
 #
