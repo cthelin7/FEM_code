@@ -14,7 +14,7 @@ import setup_funcs
 g = 0.0
 h = -0.0
 
-nodes = [1, 10, 100, 1000]
+elements = [1,10,100]
 p_val = [2, 3]
 h_list = [0.1, 0.01, 0.005, 0.002, 0.001]
 E = 1000000
@@ -22,10 +22,10 @@ E = 1000000
 results = []
 for p_v in p_val:
     this_p_results = []
-    for node_num in nodes:
+    for element_num in elements:
 
-        n_el = node_num    # num elements
-        # n_per_el = 3    # nodes per element
+        n_el = element_num    # num elements
+        # n_per_el = 3    # elements per element
 
         P = p_v
 
@@ -108,8 +108,6 @@ for p_v in p_val:
         ng1 = Nodes.nodes_list[ng1_id]
         ng2 = Nodes.nodes_list[ng2_id]  # beam problem: need an extra 0 in ID matrix
         nh = Nodes.nodes_list[nh_id]
-
-
 
         # create ID matrix
         ID = np.zeros((len(Nodes.nodes_list), 2), dtype=np.float16).tolist()
@@ -199,6 +197,7 @@ for p_v in p_val:
                 d2B = []
                 for a in range(0, n_shape_funcs):
                     d2B.append(setup_funcs.d2_bernstein(P, a, int_points[i]))
+                # d2B = [0.5,-1.0,0.5]
                 d2N = []
                 for n in range(0, n_shape_funcs):
                     sum_d2B = 0.0
@@ -223,7 +222,7 @@ for p_v in p_val:
 
                 for a in range(0, P + 1):
                     for b in range(0, P + 1):
-                        ke[a][b] += d2N[a]*E*I*d2N[b]*((2.0/he)**(-3))*w[i]
+                        ke[a][b] += d2N[a]*E*I*d2N[b]*((2.0/he)**(3))*w[i]
                         # ke[a][b] += d2N[a] * E * I * d2N[b] * ((2./he)**(-2.)) * w[i]
 
                     fe[a] += N[a] * fz * (he / 2.0) * w[i]
@@ -304,6 +303,7 @@ for p_v in p_val:
                 x_h.append(xz)
                 y_h.append(uhe)
 
+        
 
 
         sqrt_error = math.sqrt(error)
@@ -321,17 +321,17 @@ for p_v in p_val:
         this_p_results.append([P, n_el, sqrt_error, he, num_nodes])
         print P, n_el, sqrt_error, he, num_nodes
 
-        # plt.plot(x, y, 'r', x_h, y_h, 'g--')
-        # plt.title("P=" + str(P) + ", n=" + str(n_el))
-        # plt.xlabel("x")
-        # plt.ylabel("u(x)")
-        # plt.show()
+        plt.plot(x, y, 'r', x_h, y_h, 'g--')
+        plt.title("P=" + str(P) + ", n=" + str(n_el))
+        plt.xlabel("x")
+        plt.ylabel("u(x)")
+        plt.show()
     results.append(this_p_results)
 p2_errors = []
 p3_errors = []
 he_list = []
 
-for a in range(0, len(nodes)):
+for a in range(0, len(elements)):
     p2_errors.append(results[0][a][2])
     p3_errors.append(results[1][a][2])
     he_list.append(results[0][a][3])
@@ -345,9 +345,9 @@ plt.xscale('log')
 plt.show()
 
 #
-# plt.plot(nodes, p2_errors, 'r',  nodes, p3_errors, 'b')
+# plt.plot(elements, p2_errors, 'r',  elements, p3_errors, 'b')
 # # plt.title("f=" + f_choice + ", n=" + str(n_el))
-# plt.xlabel("nodes")
+# plt.xlabel("elements")
 # plt.ylabel("error")
 # plt.yscale('log')
 # plt.xscale('log')
