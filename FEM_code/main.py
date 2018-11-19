@@ -18,6 +18,7 @@ elements = [10]
 p_val = [2, 3]
 h_list = [0.1, 0.01, 0.005, 0.002, 0.001]
 E = 1000000
+b_side = 0.005
 
 results = []
 for p_v in p_val:
@@ -33,7 +34,6 @@ for p_v in p_val:
 
             n_shape_funcs = P + 1
 
-            b_side = 0.005
             # h_side = 0.005
 
             I = (1.0/12.0)*b_side*h_side**3.0
@@ -321,11 +321,11 @@ for p_v in p_val:
             this_el_num_results.append([P, n_el, sqrt_error, he, num_nodes, tip, h_side])
             print P, n_el, sqrt_error, he, num_nodes, tip, h_side
 
-            plt.plot(x, y, 'r', x_h, y_h, 'g--')
-            plt.title("P=" + str(P) + ", n=" + str(n_el) + ", h=" + str(h_side))
-            plt.xlabel("x")
-            plt.ylabel("u(x)")
-            plt.show()
+            # plt.plot(x, y, 'r', x_h, y_h, 'g--')
+            # plt.title("P=" + str(P) + ", n=" + str(n_el) + ", h=" + str(h_side))
+            # plt.xlabel("x")
+            # plt.ylabel("u(x)")
+            # plt.show()
         this_p_results.append(this_el_num_results)
     results.append(this_p_results)
 p2_errors = []
@@ -344,24 +344,25 @@ for a in range(0, len(elements)):
         p3_tip.append(results[1][a][h][5])
         nodes.append(results[0][a][0][4])
 
-plt.plot(he_list, p2_errors, 'r',  he_list, p3_errors, 'b')
+# plt.plot(he_list, p2_errors, 'r',  he_list, p3_errors, 'b')
+# # plt.title("f=" + f_choice + ", n=" + str(n_el))
+# plt.xlabel("he")
+# plt.ylabel("error")
+# plt.yscale('log')
+# plt.xscale('log')
+# plt.show()
+#
+# plt.plot(nodes, p2_tip, 'r',  nodes, p3_tip, 'b')
 # plt.title("f=" + f_choice + ", n=" + str(n_el))
-plt.xlabel("he")
-plt.ylabel("error")
-plt.yscale('log')
-plt.xscale('log')
-plt.show()
-
-plt.plot(nodes, p2_tip, 'r',  nodes, p3_tip, 'b')
-plt.title("f=" + f_choice + ", n=" + str(n_el))
-plt.xlabel("nodes")
-plt.ylabel("u(x)")
-plt.show()
+# plt.xlabel("nodes")
+# plt.ylabel("u(x)")
+# plt.show()
 
 exact_tip = []
 beam_slenderness = []
 for h in h_list:
-    exact_tip.append((10 * (h/h) ** 3.0) / (8. * E * I))
+    I = (1.0 / 12.0) * b_side * h ** 3.0
+    exact_tip.append((10 * (h) ** 3.0) / (8. * E * I))
     beam_slenderness.append(1./h)
 
 plt.plot(beam_slenderness, p2_tip, 'r',  beam_slenderness, p3_tip, 'b', beam_slenderness, exact_tip, 'g')
