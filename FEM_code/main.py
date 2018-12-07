@@ -14,7 +14,7 @@ import setup_funcs
 g = 0.0
 h = -0.0
 
-nodes = [1, 10, 100, 1000]
+nodes = [5]
 p_val = [2, 3]
 
 results = []
@@ -206,8 +206,9 @@ for p_v in p_val:
                         ke[a][b] += dN[a]*dN[b]*(2.0/he)*w[i]
 
                     fe[a] += N[a] * fz * (he / 2.0) * w[i]
-                # print str(e) + " " + str(i)
-                # print fe
+                print str(e) + " " + str(i)
+            #     print "fe" + str(fe)
+            # print "ke"
             # for row in ke:
             #     print row
             # print " "
@@ -227,6 +228,13 @@ for p_v in p_val:
             # for row in K:
             #     print row
 
+        print "K"
+        for row in K:
+            print row
+
+        print "F"
+        for row in F:
+            print row
 
         F_np = np.asarray([F])
         F_npt = np.ndarray.transpose(F_np)
@@ -239,7 +247,8 @@ for p_v in p_val:
 
         # add the known value for the right boundary
         d = np.append(d, 0.0)
-        # print d
+        print "d"
+        print d
 
         error = 0.0
         d_error = 0.0
