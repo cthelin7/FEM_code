@@ -64,6 +64,8 @@ def d2_bernstein(P, a, z):
 
 def extraction_operator_setup(P, n_el):
     Ce = []
+    if P==1:
+        print "WHAT IS EXTRACTION OP FOR P==1?"
     if P == 2:
         if n_el >= 3:
             Ce.append([[1.0, 0.0, 0.0],
