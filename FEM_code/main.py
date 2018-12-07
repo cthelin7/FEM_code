@@ -16,6 +16,7 @@ h = -0.0
 
 nodes = [5]
 p_val = [2, 3]
+rho = 0.5
 
 results = []
 for p_v in p_val:
@@ -134,6 +135,9 @@ for p_v in p_val:
         # initialize K
         K = np.zeros((len(active_nodes), len(active_nodes)), dtype=np.float16).tolist()
 
+        # initialize M
+        M = np.zeros((len(active_nodes), len(active_nodes)), dtype=np.float16).tolist()
+
         #initialize F
         F = []
         for node in active_nodes:
@@ -150,6 +154,7 @@ for p_v in p_val:
 
             fe = [0.0]*(P + 1)
             ke = []
+            me = []
             for a in range(0, P + 1):
                 ke_col = []
                 for b in range(0, P + 1):
@@ -204,6 +209,7 @@ for p_v in p_val:
                 for a in range(0, P + 1):
                     for b in range(0, P + 1):
                         ke[a][b] += dN[a]*dN[b]*(2.0/he)*w[i]
+                        me[a][b] += N[a]*rho*N[b]*(he/2)
 
                     fe[a] += N[a] * fz * (he / 2.0) * w[i]
                 print str(e) + " " + str(i)
@@ -224,6 +230,7 @@ for p_v in p_val:
                     for b in range(0, P + 1):
                         if LM[e][b] > 0.0:
                             K[LM[e][a] - 1][LM[e][b] - 1] += ke[a][b]
+                            M[LM[e][a] - 1][LM[e][b] - 1] += me[a][b]
                     F[LM[e][a] - 1] += fe[a]
             # for row in K:
             #     print row
