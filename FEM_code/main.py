@@ -5,6 +5,7 @@ import funcs
 import math
 import matplotlib.pyplot as plt
 import setup_funcs
+import scipy as scp
 
 # uxx + f = 0
 # u(1) = 0      ------ ng = last, x = 1     ----- ng_id = num_nodes
@@ -160,6 +161,7 @@ for p_v in p_val:
                 for b in range(0, P + 1):
                     ke_col.append(0.0)
                 ke.append(ke_col)
+                me.append(ke_col)
 
             for i in range(0, len(int_points)):
                 B = []
@@ -237,6 +239,10 @@ for p_v in p_val:
 
         print "K"
         for row in K:
+            print row
+
+        print "M"
+        for row in M:
             print row
 
         print "F"
