@@ -60,6 +60,9 @@ def extraction_operator_setup(P, n_el):
     Ce = []
     if P==1:
         print "WHAT IS EXTRACTION OP FOR P==1?"
+        for n in range(0, n_el):
+            Ce.append([[1.0, 0.0],
+                       [0.0, 1.0]])
     if P == 2:
         if n_el >= 3:
             Ce.append([[1.0, 0.0, 0.0],

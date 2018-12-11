@@ -15,8 +15,8 @@ import scipy as scp
 g = 0.0
 h = -0.0
 
-nodes = [5]
-p_val = [2, 3]
+nodes = [100]
+p_val = [1]
 rho = 0.5
 
 results = []
@@ -275,7 +275,7 @@ for p_v in p_val:
                 this_Ne = all_Ne[e][i]
                 this_dNe = all_dNe[e][i]
                 u_exact = 0.0
-                for a in range(0, P + 1):
+                for a in range(0, n_shape_funcs):
                     # sum the xa*Na
                     xe = x_locations[IEN[e][a]]
                     xz += xe * this_Ne[a]
@@ -320,11 +320,11 @@ for p_v in p_val:
         this_p_results.append([P, n_el, sqrt_error, he, num_nodes])
         print P, n_el, sqrt_error, he, num_nodes
 
-        # plt.plot(x, y, 'r', x_h, y_h, 'g--')
-        # plt.title("f=" + f_choice + ", n=" + str(n_el))
-        # plt.xlabel("x")
-        # plt.ylabel("u(x)")
-        # plt.show()
+        plt.plot(x, y, 'r', x_h, y_h, 'g--')
+        plt.title("f=" + f_choice + ", n=" + str(n_el))
+        plt.xlabel("x")
+        plt.ylabel("u(x)")
+        plt.show()
     results.append(this_p_results)
 p2_errors = []
 p3_errors = []
