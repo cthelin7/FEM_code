@@ -15,7 +15,7 @@ import scipy as scp
 g = 0.0
 h = -0.0
 
-nodes = [100]
+nodes = [10]
 p_val = [1]
 rho = 0.5
 
@@ -158,10 +158,12 @@ for p_v in p_val:
             me = []
             for a in range(0, P + 1):
                 ke_col = []
+                me_col = []
                 for b in range(0, P + 1):
                     ke_col.append(0.0)
+                    me_col.append(0.0)
                 ke.append(ke_col)
-                me.append(ke_col)
+                me.append(me_col)
 
             for i in range(0, len(int_points)):
                 B = []
