@@ -18,7 +18,7 @@ for PValue in range(0, len(PVector)):
         ### Input
         P = PVector[PValue]
         print('P: ' + str(P))
-        numElem = elemVector[elemValue] - P + 2
+        numElem = elemVector[elemValue] - P + 1
         hElem = 1.0 / numElem
         E = 1
         rho = 1
@@ -26,7 +26,7 @@ for PValue in range(0, len(PVector)):
 
         ### Setup
         def get_bernstein(P, z):
-            bernsteinVector = [None]*(P + 1)
+            bernsteinVector = [None] * (P + 1)
             for a in range(0, P + 1):
                 binomCoef = math.factorial(P) / (math.factorial(a) * math.factorial(P - a))
                 bernstein = (1 / (2.0 ** P)) * binomCoef * ((1 - z) ** (P - a)) * ((1 + z) ** a)
@@ -119,7 +119,7 @@ for PValue in range(0, len(PVector)):
         skippedIndices = 0
         ID = np.zeros(len(nodeVector))
         for i in range(0, len(nodeVector)):
-            if nodeVector[i] == 0 or nodeVector[i] == 1:
+            if nodeVector[i] == 1:
                 ID[i] = 0
                 skippedIndices = skippedIndices + 1
             else:
@@ -163,8 +163,8 @@ for PValue in range(0, len(PVector)):
 
                 for a in range(0, P + 1):
                     for b in range(0, P + 1):
-                        ke[a][b] = ke[a][b] + E * NPrime[a] * NPrime[b] * 2.0 / hElem * w[i]
-                        me[a][b] = me[a][b] + rho * N[a] * N[b] * hElem / 2.0 * w[i]
+                        ke[a][b] = ke[a][b] + E * NPrime[a] * NPrime[b] * 2 / hElem * w[i]
+                        me[a][b] = me[a][b] + rho * N[a] * N[b] * hElem / 2 * w[i]
 
             for a in range(0, P + 1):
                 if LM[a][e] > 0:
@@ -180,10 +180,9 @@ for PValue in range(0, len(PVector)):
         for columnNum in range(0, 10):
             extractedColumn = eigVectorArray[:, columnNum]
             if (columnNum == 0):
-                extractedColumn = np.interp(extractedColumn, (extractedColumn.min(), extractedColumn.max()), (0, 1))
+                extractedColumn = np.interp(extractedColumn, (extractedColumn.min(), extractedColumn.max()), (1, 0))
             else:
                 extractedColumn = np.interp(extractedColumn, (extractedColumn.min(), extractedColumn.max()), (-1, 1))
-            extractedColumn = np.insert(extractedColumn, 0, 0)
             extractedColumn = np.append(extractedColumn, 0)
             eigVectorArrayArray[PValue][columnNum] = extractedColumn
 
@@ -192,7 +191,7 @@ for PValue in range(0, len(PVector)):
         errorVector = []
 
         for frequencyNum in range(0, 1000):
-            frequency = math.pi * (frequencyNum + 1)
+            frequency = math.pi * (frequencyNum + 1 - 0.5)
             frequencyVector.append(frequency)
             normalizedModeNumber = (frequencyNum + 1) / 1000.0
             normalizedModeNumberVector.append(normalizedModeNumber)
@@ -215,7 +214,7 @@ plt.plot(nodeVectorVector[0], eigVectorArrayArray[0][8], label='Mode = 9')
 plt.plot(nodeVectorVector[0], eigVectorArrayArray[0][9], label='Mode = 10')
 plt.xlabel('Node Location')
 plt.ylabel('Displacement Amplitude')
-plt.title('P=1 Mode Shapes, Fixed-Fixed')
+plt.title('P=1 Mode Shapes, Free-Fixed')
 plt.legend(loc='upper left')
 
 plt.figure(2)
@@ -231,7 +230,7 @@ plt.plot(nodeVectorVector[1], eigVectorArrayArray[1][8], label='Mode = 9')
 plt.plot(nodeVectorVector[1], eigVectorArrayArray[1][9], label='Mode = 10')
 plt.xlabel('Node Location')
 plt.ylabel('Displacement Amplitude')
-plt.title('P=2 Mode Shapes, Fixed-Fixed')
+plt.title('P=2 Mode Shapes, Free-Fixed')
 plt.legend(loc='upper left')
 
 plt.figure(3)
@@ -247,7 +246,7 @@ plt.plot(nodeVectorVector[2], eigVectorArrayArray[2][8], label='Mode = 9')
 plt.plot(nodeVectorVector[2], eigVectorArrayArray[2][9], label='Mode = 10')
 plt.xlabel('Node Location')
 plt.ylabel('Displacement Amplitude')
-plt.title('P=3 Mode Shapes, Fixed-Fixed')
+plt.title('P=3 Mode Shapes, Free-Fixed')
 plt.legend(loc='upper left')
 
 plt.figure(4)
@@ -257,6 +256,6 @@ plt.plot(normalizedModeNumberVectorVector[2], errorVectorVector[2], 'b--', label
 plt.xlabel('Normalized Mode Number (n/N)')
 plt.ylabel('Frequency Error (wh/w)')
 plt.ylim(bottom=0.99, top=1.23)
-plt.title('Fixed-Fixed')
+plt.title('Free-Fixed')
 plt.legend(loc='upper left')
 plt.show()

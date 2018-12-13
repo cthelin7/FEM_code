@@ -16,12 +16,19 @@ g = 0.0
 h = -0.0
 
 nodes = [1001]
-p_val = [1]
+p_val = [1, 2, 3]
 rho = 1.0
 # E = 1000000
 E = 1
-mode_choice = "fixed-fixed"
-# mode_choice = "free-fixed"
+# mode_choice = "fixed-fixed"
+mode_choice = "free-fixed"
+
+eigValueVectorVector = [[0],[0],[0]]
+frequencyVectorVector = [[0],[0],[0]]
+errorVectorVector = [[0],[0],[0]]
+normalizedModeNumberVectorVector = [[0],[0],[0]]
+eigVectorArrayArray = [[[0]]*10,[[0]]*10,[[0]]*10]
+nodeVectorVector = [[0],[0],[0]]
 
 results = []
 for p_v in p_val:
@@ -88,7 +95,7 @@ for p_v in p_val:
         # compute node locations
         x_locations = setup_funcs.greville_abscissae(P, n_el, knot_v)
         num_nodes = len(x_locations)
-
+        nodeVectorVector[P-1] = x_locations
 
         ng1_id = num_nodes
         if mode_choice == "fixed-fixed":
@@ -229,7 +236,7 @@ for p_v in p_val:
                         me[a][b] += N[a]*rho*N[b]*(he/2.0)*w[i]
 
                     # fe[a] += N[a] * fz * (he / 2.0) * w[i]
-                print str(e) + " " + str(i)
+                # print str(e) + " " + str(i)
             #     print "fe" + str(fe)
             # print "ke"
             # for row in ke:
@@ -281,22 +288,27 @@ for p_v in p_val:
         eig_values, eig_vectors = scp.eigh(K, M)
 
         nat_freqs = np.sqrt(eig_values)
+        eigValueVectorVector[P-1] = nat_freqs
         # for eig in eig_values:
         #     nat_freqs.append(math.sqrt(eig))
         # # setup_funcs.scale_vector(eig_vectors)
         # for i in xrange(len(eig_vectors)):
         #     eig_vectors[i] = setup_funcs.scale_vector(eig_vectors[i])
 
-        eigVectorArrayArray = [0]*10
-        for columnNum in range(0,10):
+        # eigVectorArrayArray = [[0]]*10
+        for columnNum in range(0, 10):
             extractedColumn = eig_vectors[:, columnNum]
             if (columnNum == 0):
-                extractedColumn = np.interp(extractedColumn, (extractedColumn.min(), extractedColumn.max()), (0, 1))
+                if mode_choice == "fixed-fixed":
+                    extractedColumn = np.interp(extractedColumn, (extractedColumn.min(), extractedColumn.max()), (0, 1))
+                else:
+                    extractedColumn = np.interp(extractedColumn, (extractedColumn.min(), extractedColumn.max()), (1, 0))
             else:
                 extractedColumn = np.interp(extractedColumn, (extractedColumn.min(), extractedColumn.max()), (-1, 1))
-            extractedColumn = np.insert(extractedColumn, 0, 0)
+            if mode_choice == "fixed-fixed":
+                extractedColumn = np.insert(extractedColumn, 0, 0)
             extractedColumn = np.append(extractedColumn, 0)
-            eigVectorArrayArray[columnNum] = extractedColumn
+            eigVectorArrayArray[P-1][columnNum] = extractedColumn
 
 
         error = 0.0
@@ -340,12 +352,25 @@ for p_v in p_val:
         wn = []
         wn_error = []
         norm_mode_number = []
-        for n in xrange(len(eig_vectors)):
-            wn.append(w_func(n, 1.0, E, rho))
-            wn.append(math.pi*(n + 1))
-            wn_error.append(eig_values[n]/wn[-1])
-            norm_mode_number.append(float(n + 1)/len(eig_vectors))
+        for n in range(0, len(eig_vectors)):
+            # wn.append(w_func(n, 1.0, E, rho))
+            if mode_choice == "fixed-fixed":
+                wn.append(math.pi*(n + 1))
+            else:
+                wn.append(math.pi * (n + 1 - 0.5))
+            wn_error.append(nat_freqs[n]/wn[n])
+            norm_mode_number.append(float(n + 1)/float(len(eig_vectors)))
 
+        # for frequencyNum in range(0, 1000):
+        #     frequency = math.pi * (frequencyNum + 1)
+        #     frequencyVector.append(frequency)
+        #     normalizedModeNumber = (frequencyNum + 1) / 1000.0
+        #     normalizedModeNumberVector.append(normalizedModeNumber)
+        #     errorVector.append(eigValueVector[frequencyNum] / frequencyVector[frequencyNum])
+
+        frequencyVectorVector[P-1] = wn
+        normalizedModeNumberVectorVector[P-1] = norm_mode_number
+        errorVectorVector[P-1] = wn_error
         # print "wn:" + str(wn)
         # print "eig:" + str(eig_values)
 
@@ -364,7 +389,7 @@ for p_v in p_val:
         y = u(x)
 
         this_p_results.append([P, n_el, sqrt_error, he, num_nodes, wn_error, norm_mode_number])
-        print P, n_el, sqrt_error, he, num_nodes, wn_error, norm_mode_number
+        # print P, n_el, sqrt_error, he, num_nodes, wn_error, norm_mode_number
 
         # plt.plot(x, y, 'r', x_h, y_h, 'g--')
         # plt.title("f=" + f_choice + ", n=" + str(n_el))
@@ -372,50 +397,112 @@ for p_v in p_val:
         # plt.ylabel("u(x)")
         # plt.show()
 
-        plt.plot(norm_mode_number, wn_error, 'r')
-        plt.title("frequencies")
-        plt.xlabel("normed mode number")
-        plt.ylabel("normed freq")
-        plt.show()
+        # plt.plot(norm_mode_number, wn_error, 'r')
+        # plt.title("frequencies")
+        # plt.xlabel("normed mode number")
+        # plt.ylabel("normed freq")
+        # plt.show()
 
-        x_eig = np.arange(0.0, 1.0, 1.0/len(eigVectorArrayArray[0]))
-        plt.plot(x_eig[0:-1], eigVectorArrayArray[0], label='mode 1')
-        plt.plot(x_eig[0:-1], eigVectorArrayArray[1], label='mode 2')
-        plt.plot(x_eig[0:-1], eigVectorArrayArray[2], label='mode 3')
-        plt.plot(x_eig[0:-1], eigVectorArrayArray[3], label='mode 4')
-        plt.plot(x_eig[0:-1], eigVectorArrayArray[4], label='mode 5')
-        plt.plot(x_eig[0:-1], eigVectorArrayArray[5], label='mode 6')
-        plt.plot(x_eig[0:-1], eigVectorArrayArray[6], label='mode 7')
-        plt.plot(x_eig[0:-1], eigVectorArrayArray[7], label='mode 8')
-        plt.plot(x_eig[0:-1], eigVectorArrayArray[8], label='mode 9')
-        plt.plot(x_eig[0:-1], eigVectorArrayArray[9], label='mode 10')
-        plt.title("mode_shapes")
-        plt.xlabel("x")
-        plt.ylabel("mode displacement")
-        plt.show()
+        # x_eig = np.arange(0.0, 1.0, 1.0/len(eigVectorArrayArray[0][0]))
+        # plt.plot(x_eig[0:-1], eigVectorArrayArray[P][0], label='mode 1')
+        # plt.plot(x_eig[0:-1], eigVectorArrayArray[P][1], label='mode 2')
+        # plt.plot(x_eig[0:-1], eigVectorArrayArray[P][2], label='mode 3')
+        # plt.plot(x_eig[0:-1], eigVectorArrayArray[P][3], label='mode 4')
+        # plt.plot(x_eig[0:-1], eigVectorArrayArray[P][4], label='mode 5')
+        # plt.plot(x_eig[0:-1], eigVectorArrayArray[P][5], label='mode 6')
+        # plt.plot(x_eig[0:-1], eigVectorArrayArray[P][6], label='mode 7')
+        # plt.plot(x_eig[0:-1], eigVectorArrayArray[P][7], label='mode 8')
+        # plt.plot(x_eig[0:-1], eigVectorArrayArray[P][8], label='mode 9')
+        # plt.plot(x_eig[0:-1], eigVectorArrayArray[P][9], label='mode 10')
+        # plt.title("mode_shapes")
+        # plt.xlabel("x")
+        # plt.ylabel("mode displacement")
+        # plt.show()
     results.append(this_p_results)
 p2_errors = []
 p3_errors = []
 he_list = []
 
-for a in range(0, len(nodes)):
-    p2_errors.append(results[0][a][2])
-    # p3_errors.append(results[1][a][2])
-    he_list.append(results[0][a][3])
+print "plots"
+plt.figure(1)
+plt.plot(nodeVectorVector[0], eigVectorArrayArray[0][0], label = 'Mode = 1')
+plt.plot(nodeVectorVector[0], eigVectorArrayArray[0][1], label = 'Mode = 2')
+plt.plot(nodeVectorVector[0], eigVectorArrayArray[0][2], label = 'Mode = 3')
+plt.plot(nodeVectorVector[0], eigVectorArrayArray[0][3], label = 'Mode = 4')
+plt.plot(nodeVectorVector[0], eigVectorArrayArray[0][4], label = 'Mode = 5')
+plt.plot(nodeVectorVector[0], eigVectorArrayArray[0][5], label = 'Mode = 6')
+plt.plot(nodeVectorVector[0], eigVectorArrayArray[0][6], label = 'Mode = 7')
+plt.plot(nodeVectorVector[0], eigVectorArrayArray[0][7], label = 'Mode = 8')
+plt.plot(nodeVectorVector[0], eigVectorArrayArray[0][8], label = 'Mode = 9')
+plt.plot(nodeVectorVector[0], eigVectorArrayArray[0][9], label = 'Mode = 10')
+plt.xlabel('Node Location')
+plt.ylabel('Displacement Amplitude')
+plt.title('P=1 Mode Shapes, Fixed-Fixed')
+plt.legend(loc = 'upper left')
 
-plt.plot(he_list, p2_errors, 'r',  he_list, p3_errors, 'b')
-# plt.title("f=" + f_choice + ", n=" + str(n_el))
-plt.xlabel("he")
-plt.ylabel("error")
-plt.yscale('log')
-plt.xscale('log')
+plt.figure(2)
+plt.plot(nodeVectorVector[1], eigVectorArrayArray[1][0], label='Mode = 1')
+plt.plot(nodeVectorVector[1], eigVectorArrayArray[1][1], label='Mode = 2')
+plt.plot(nodeVectorVector[1], eigVectorArrayArray[1][2], label='Mode = 3')
+plt.plot(nodeVectorVector[1], eigVectorArrayArray[1][3], label='Mode = 4')
+plt.plot(nodeVectorVector[1], eigVectorArrayArray[1][4], label='Mode = 5')
+plt.plot(nodeVectorVector[1], eigVectorArrayArray[1][5], label='Mode = 6')
+plt.plot(nodeVectorVector[1], eigVectorArrayArray[1][6], label='Mode = 7')
+plt.plot(nodeVectorVector[1], eigVectorArrayArray[1][7], label='Mode = 8')
+plt.plot(nodeVectorVector[1], eigVectorArrayArray[1][8], label='Mode = 9')
+plt.plot(nodeVectorVector[1], eigVectorArrayArray[1][9], label='Mode = 10')
+plt.xlabel('Node Location')
+plt.ylabel('Displacement Amplitude')
+plt.title('P=2 Mode Shapes, Fixed-Fixed')
+plt.legend(loc='upper left')
+
+plt.figure(3)
+plt.plot(nodeVectorVector[2], eigVectorArrayArray[2][0], label='Mode = 1')
+plt.plot(nodeVectorVector[2], eigVectorArrayArray[2][1], label='Mode = 2')
+plt.plot(nodeVectorVector[2], eigVectorArrayArray[2][2], label='Mode = 3')
+plt.plot(nodeVectorVector[2], eigVectorArrayArray[2][3], label='Mode = 4')
+plt.plot(nodeVectorVector[2], eigVectorArrayArray[2][4], label='Mode = 5')
+plt.plot(nodeVectorVector[2], eigVectorArrayArray[2][5], label='Mode = 6')
+plt.plot(nodeVectorVector[2], eigVectorArrayArray[2][6], label='Mode = 7')
+plt.plot(nodeVectorVector[2], eigVectorArrayArray[2][7], label='Mode = 8')
+plt.plot(nodeVectorVector[2], eigVectorArrayArray[2][8], label='Mode = 9')
+plt.plot(nodeVectorVector[2], eigVectorArrayArray[2][9], label='Mode = 10')
+plt.xlabel('Node Location')
+plt.ylabel('Displacement Amplitude')
+plt.title('P=3 Mode Shapes, Fixed-Fixed')
+plt.legend(loc='upper left')
+
+plt.figure(4)
+plt.plot(normalizedModeNumberVectorVector[0], errorVectorVector[0], 'r--', label='P=1')
+plt.plot(normalizedModeNumberVectorVector[1], errorVectorVector[1], 'g--', label='P=2')
+plt.plot(normalizedModeNumberVectorVector[2], errorVectorVector[2], 'b--', label='P=3')
+plt.xlabel('Normalized Mode Number (n/N)')
+plt.ylabel('Frequency Error (wh/w)')
+plt.ylim(bottom=0.99, top=1.23)
+plt.title('Fixed-Fixed')
+plt.legend(loc='upper left')
 plt.show()
 
 
-plt.plot(nodes, p2_errors, 'r')
-# plt.title("f=" + f_choice + ", n=" + str(n_el))
-plt.xlabel("nodes")
-plt.ylabel("error")
-plt.yscale('log')
-plt.xscale('log')
-plt.show()
+#
+# for a in range(0, len(nodes)):
+#     p2_errors.append(results[0][a][2])
+#     # p3_errors.append(results[1][a][2])
+#     he_list.append(results[0][a][3])
+#
+# plt.plot(he_list, p2_errors, 'r',  he_list, p3_errors, 'b')
+# # plt.title("f=" + f_choice + ", n=" + str(n_el))
+# plt.xlabel("he")
+# plt.ylabel("error")
+# plt.yscale('log')
+# plt.xscale('log')
+# plt.show()
+#
+#
+# plt.plot(nodes, p2_errors, 'r')
+# # plt.title("f=" + f_choice + ", n=" + str(n_el))
+# plt.xlabel("nodes")
+# plt.ylabel("error")
+# plt.yscale('log')
+# plt.xscale('log')
+# plt.show()
