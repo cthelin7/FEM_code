@@ -1,3 +1,5 @@
+import math
+
 def constant(x):
     return 1
 
@@ -96,3 +98,12 @@ def dn1_el(z):
 
 def dn2_el(z):
     return 0.5
+
+
+def fixed_fixed_wn(n, L, E, rho):
+    wn = (math.pi*n/L)*(math.sqrt(E/rho))
+    return wn
+
+def free_fixed_wn(n, L, E, rho):
+    wn = (math.pi*(n-0.5)/L)*(math.sqrt(E/rho))
+    return wn

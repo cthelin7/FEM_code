@@ -1,4 +1,5 @@
 import math
+import numpy as np
 
 def greville_abscissae(P, num_elems, knots):
     x = []
@@ -41,6 +42,7 @@ def d_bernstein(P, a, z):
     z_portion = (1.0 / (2.0**P)) \
                 * (((-1.0) * (P - a) * ((1.0 - z)**(P - a - 1.0)) * ((1.0 + z)**(a))) \
                 + ((a) * (1.0) * ((1.0 - z)**(P - a)) * ((1.0 + z)**(a - 1.0))))
+    # z_portion = (1/(2.0**P))*((z+1.0)**(a-1.0))*(2.0*a+P*(-z-1.0))*((1.0-z)**(-a+P-1.0))
     d_bernie = binomial_coeff * z_portion
     return d_bernie
 
@@ -121,3 +123,13 @@ def knot_vector(P, num_elems):
         knots.append(1.0)
 
     return knots
+
+
+def scale_vector(vect):
+    # rows, cols = vect.shape()
+    # for col in xrange(cols):
+    #     vect[:,col] /= abs(vect[:,col]).max()
+    # max = np.max(vect)
+    # min = np.min(vect)
+    vect = np.interp(vect, (vect.min(), vect.max()), (-1.0, +1.0))
+    return vect
